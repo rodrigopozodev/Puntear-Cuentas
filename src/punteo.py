@@ -1,22 +1,15 @@
 import pandas as pd
 import os
 from itertools import combinations
-
-def cargar_datos(ruta_archivo):
-    """
-    Carga el archivo Excel en un DataFrame.
-    """
-    return pd.read_excel(ruta_archivo)
+from utils import cargar_datos, crear_directorio
 
 def emparejar_iguales(df):
     """
-    Empareja las filas con 'Debe' y 'Haber' idénticos, asignando un índice de punteo.
-    Ignora las celdas con valor 0.00 en las columnas 'Debe' y 'Haber', pero no ignora la fila completa.
+    Empareja las filas con 'Debe' y 'Haber' idénticos.
     """
-    df['Indice_Punteo'] = None  # Inicializamos la columna de punteo
+    df['Indice_Punteo'] = None
     punteo_index = 1
     
-    # Buscamos coincidencias en las columnas 'Debe' y 'Haber'
     for i, fila in df[df['Indice_Punteo'].isna()].iterrows():
         if fila['Debe'] == 0 and fila['Haber'] != 0:
             coincidencia = df[(df['Debe'] == fila['Haber']) & (df['Indice_Punteo'].isna())]
@@ -25,9 +18,8 @@ def emparejar_iguales(df):
         elif round(fila['Debe'], 2) == round(fila['Haber'], 2) and fila['Debe'] != 0:
             coincidencia = df[(round(df['Debe'], 2) == round(fila['Haber'], 2)) & (df['Indice_Punteo'].isna())]
         else:
-            continue  # Si no hay coincidencia, pasamos al siguiente
+            continue
 
-        # Si encontramos coincidencias, asignamos el índice de punteo
         if not coincidencia.empty:
             idx = coincidencia.index[0]
             df.at[i, 'Indice_Punteo'] = punteo_index
@@ -38,21 +30,18 @@ def emparejar_iguales(df):
 
 def emparejar_por_suma(df):
     """
-    Busca combinaciones de sumas en la columna 'Debe' para emparejar con los valores de 'Haber'.
-    Ignora las celdas con valor 0.00 en las columnas 'Debe' y 'Haber', pero no ignora la fila completa.
+    Busca combinaciones de sumas en la columna 'Debe' para emparejar con 'Haber'.
     """
     no_punteados = df[df['Indice_Punteo'].isna()].copy()
     punteo_index = df['Indice_Punteo'].max() + 1 if df['Indice_Punteo'].notna().any() else 1
 
-    # Iteramos solo sobre las filas que no han sido punteadas
     for i, fila in no_punteados.iterrows():
         if fila['Debe'] == 0 and fila['Haber'] == 0:
-            continue  # Ignoramos filas con 'Debe' y 'Haber' a 0
+            continue
         
         objetivo = round(fila['Haber'], 2)
         candidatos = no_punteados[no_punteados['Debe'] > 0]
 
-        # Usamos combinaciones para encontrar sumas que coincidan con el valor de 'Haber'
         for n in range(2, len(candidatos) + 1):
             for combinacion in combinations(candidatos.index, n):
                 suma = round(sum(candidatos.loc[list(combinacion), 'Debe']), 2)
@@ -66,29 +55,25 @@ def emparejar_por_suma(df):
     return df
 
 def generar_informes(df, archivo):
-    """
-    Genera los informes con los datos punteados y no punteados.
-    """
-    # Filtramos los datos emparejados y no emparejados
+    """Genera los informes con los datos punteados y no punteados."""
+    # Ordenamos el DataFrame por Indice_Punteo
+    df['Indice_Punteo'] = pd.to_numeric(df['Indice_Punteo'], errors='coerce')
+    df = df.sort_values(by='Indice_Punteo')
+
+    # Filtramos los datos
     emparejados = df[df['Indice_Punteo'].notna()]
     no_emparejados = df[df['Indice_Punteo'].isna()]
 
-    # Añadimos la columna 'Indice_Punteo' al final, sin cambiar el orden de las filas
-    emparejados = emparejados[emparejados.columns.tolist() + ['Indice_Punteo']]
-    no_emparejados = no_emparejados[no_emparejados.columns.tolist() + ['Indice_Punteo']]
-
-    # Creamos la carpeta 'informes' si no existe
-    carpeta_informes = "informes"
-    if not os.path.exists(carpeta_informes):
-        os.makedirs(carpeta_informes)
-
-    # Usamos el nombre del archivo para crear una subcarpeta
+    # Configuramos las rutas
     nombre_base = os.path.basename(archivo).replace(".xlsx", "")
+    carpeta_informes = "informes"
     subcarpeta_informes = os.path.join(carpeta_informes, nombre_base)
-    if not os.path.exists(subcarpeta_informes):
-        os.makedirs(subcarpeta_informes)
+    
+    # Creamos las carpetas necesarias
+    crear_directorio(carpeta_informes)
+    crear_directorio(subcarpeta_informes)
 
-    # Se generan los informes para cada archivo
+    # Generamos los informes
     emparejados.to_excel(f"{subcarpeta_informes}/{nombre_base}_punteados.xlsx", index=False)
     no_emparejados.to_excel(f"{subcarpeta_informes}/{nombre_base}_no_punteados.xlsx", index=False)
 
@@ -115,10 +100,6 @@ def main():
         
         print("Emparejando valores por suma...")
         df = emparejar_por_suma(df)
-        
-        # Aseguramos que los índices de punteo estén ordenados de forma numérica
-        df['Indice_Punteo'] = pd.to_numeric(df['Indice_Punteo'], errors='coerce')
-        df = df.sort_values(by='Indice_Punteo').reset_index(drop=True)
         
         generar_informes(df, ruta_archivo)
     
