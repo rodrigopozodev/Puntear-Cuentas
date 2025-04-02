@@ -78,16 +78,21 @@ export class InformesComponent implements OnInit {
   }
 
   viewExcelContent(file: InformeFile) {
+    console.log('Abriendo archivo:', file.name); // Para debugging
     this.selectedFile = file;
     this.loadingData = true;
+    this.excelData = null; // Reset datos anteriores
+
     this.informesService.getExcelContent(file.path).subscribe({
       next: (data) => {
+        console.log('Datos recibidos:', data); // Para debugging
         this.excelData = data;
         this.loadingData = false;
       },
       error: (err) => {
         console.error('Error al cargar datos:', err);
         this.loadingData = false;
+        this.selectedFile = null;
       }
     });
   }
@@ -95,5 +100,9 @@ export class InformesComponent implements OnInit {
   closeModal() {
     this.selectedFile = null;
     this.excelData = null;
+  }
+
+  stopPropagation(event: Event) {
+    event.stopPropagation();
   }
 }
