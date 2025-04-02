@@ -43,7 +43,6 @@ def emparejar_por_suma(df):
 
         for n in range(2, len(candidatos) + 1):
             for combinacion in combinations(candidatos.index, n):
-                # Acceder a las filas usando los índices de la combinación de manera correcta
                 suma = sum(candidatos.loc[list(combinacion), 'Debe'])
                 if suma == objetivo:
                     df.loc[list(combinacion), 'Indice_Punteo'] = punteo_index
@@ -62,9 +61,9 @@ def generar_informes(df):
     emparejados = df[df['Indice_Punteo'].notna()]
     no_emparejados = df[df['Indice_Punteo'].isna()]
 
-    # Insertamos la columna 'Indice_Punteo' al principio del DataFrame
-    emparejados.insert(0, 'Indice_Punteo', emparejados['Indice_Punteo'])
-    no_emparejados.insert(0, 'Indice_Punteo', no_emparejados['Indice_Punteo'])
+    # Insertamos la columna 'Indice_Punteo' al principio de ambos DataFrames sin eliminar otras columnas
+    emparejados = pd.concat([emparejados['Indice_Punteo'], emparejados.drop(columns='Indice_Punteo')], axis=1)
+    no_emparejados = pd.concat([no_emparejados['Indice_Punteo'], no_emparejados.drop(columns='Indice_Punteo')], axis=1)
 
     # Guardamos los resultados en archivos Excel con todas las columnas
     emparejados.to_excel("informes/punteados.xlsx", index=False)
