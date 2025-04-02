@@ -17,7 +17,7 @@ def procesar_archivo(ruta_archivo):
         df = cargar_datos(ruta_archivo)
         total_registros = len(df)
         
-        print("Primera pasada - valores exactos...")
+        print(" Primera pasada - valores exactos...")
         df, punteo_index = emparejar_iguales(df)
         
         print("Segunda pasada - combinaciones pequeñas...")
