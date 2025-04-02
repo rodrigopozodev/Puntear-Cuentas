@@ -1,5 +1,12 @@
 import pandas as pd
+import os
 from itertools import combinations
+
+def cargar_datos(ruta_archivo):
+    """
+    Carga el archivo Excel en un DataFrame.
+    """
+    return pd.read_excel(ruta_archivo)
 
 def emparejar_iguales(df):
     """
@@ -36,7 +43,8 @@ def emparejar_por_suma(df):
 
         for n in range(2, len(candidatos) + 1):
             for combinacion in combinations(candidatos.index, n):
-                suma = sum(candidatos.loc[combinacion, 'Debe'])  # Aquí corregimos el acceso a las filas
+                # Acceder a las filas usando los índices de la combinación
+                suma = sum(candidatos.loc[combinacion, 'Debe'].values)  # .values para obtener los valores directamente
                 if suma == objetivo:
                     df.loc[combinacion, 'Indice_Punteo'] = punteo_index
                     df.at[i, 'Indice_Punteo'] = punteo_index
