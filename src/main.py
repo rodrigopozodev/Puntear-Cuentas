@@ -35,10 +35,6 @@ def main():
         print("Emparejando valores por suma...")
         df = emparejar_por_suma(df)
         
-        # Aseguramos que los índices de punteo estén ordenados de forma numérica
-        df['Indice_Punteo'] = pd.to_numeric(df['Indice_Punteo'], errors='coerce')
-        df = df.sort_values(by='Indice_Punteo').reset_index(drop=True)
-        
         # Generar los informes de los datos punteados
         generar_informes(df, ruta_archivo)
 

@@ -73,9 +73,9 @@ def generar_informes(df, archivo):
     emparejados = df[df['Indice_Punteo'].notna()]
     no_emparejados = df[df['Indice_Punteo'].isna()]
 
-    # Insertamos la columna 'Indice_Punteo' al principio de ambos DataFrames sin eliminar otras columnas
-    emparejados = pd.concat([emparejados['Indice_Punteo'], emparejados.drop(columns='Indice_Punteo')], axis=1)
-    no_emparejados = pd.concat([no_emparejados['Indice_Punteo'], no_emparejados.drop(columns='Indice_Punteo')], axis=1)
+    # Añadimos la columna 'Indice_Punteo' al final, sin cambiar el orden de las filas
+    emparejados = emparejados[emparejados.columns.tolist() + ['Indice_Punteo']]
+    no_emparejados = no_emparejados[no_emparejados.columns.tolist() + ['Indice_Punteo']]
 
     # Creamos la carpeta 'informes' si no existe
     carpeta_informes = "informes"
