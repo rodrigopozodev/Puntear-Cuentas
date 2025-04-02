@@ -6,85 +6,111 @@ from utils import cargar_datos, crear_directorio
 
 def emparejar_iguales(df):
     """
-    Versión optimizada para emparejar valores iguales usando vectorización.
+    Versión ultra optimizada para emparejar valores iguales.
     """
     df['Indice_Punteo'] = None
     punteo_index = 1
     
-    # Creamos máscaras para filtrado eficiente
-    no_punteados = df['Indice_Punteo'].isna()
+    # Creamos diccionarios para búsqueda O(1)
+    debe_dict = {}
+    haber_dict = {}
     
-    # Procesamos por lotes para mejor rendimiento
-    while no_punteados.any():
-        fila = df[no_punteados].iloc[0]
+    # Construimos índices para búsqueda rápida y redondeamos a 2 decimales
+    for idx, row in df.iterrows():
+        debe = round(row['Debe'], 2)
+        haber = round(row['Haber'], 2)
         
-        if fila['Debe'] > 0 and fila['Haber'] == 0:
-            mask = (df['Haber'] == fila['Debe']) & no_punteados & (df.index != fila.name)
-        elif fila['Haber'] > 0 and fila['Debe'] == 0:
-            mask = (df['Debe'] == fila['Haber']) & no_punteados & (df.index != fila.name)
-        else:
-            no_punteados[fila.name] = False
-            continue
-            
-        if mask.any():
-            idx_match = df[mask].index[0]
-            df.loc[[fila.name, idx_match], 'Indice_Punteo'] = punteo_index
-            punteo_index += 1
-            no_punteados[fila.name] = False
-            no_punteados[idx_match] = False
-        else:
-            no_punteados[fila.name] = False
-            
-    return df
+        if debe > 0:
+            if debe not in debe_dict:
+                debe_dict[debe] = []
+            debe_dict[debe].append(idx)
+        if haber > 0:
+            if haber not in haber_dict:
+                haber_dict[haber] = []
+            haber_dict[haber].append(idx)
+    
+    # Buscamos coincidencias exactas
+    for valor in set(debe_dict.keys()) & set(haber_dict.keys()):
+        debe_indices = debe_dict[valor]
+        haber_indices = haber_dict[valor]
+        
+        for debe_idx in debe_indices:
+            if df.at[debe_idx, 'Indice_Punteo'] is not None:
+                continue
+                
+            for haber_idx in haber_indices:
+                if (df.at[haber_idx, 'Indice_Punteo'] is None and 
+                    debe_idx != haber_idx):
+                    df.loc[[debe_idx, haber_idx], 'Indice_Punteo'] = punteo_index
+                    punteo_index += 1
+                    break
+    
+    return df, punteo_index
 
-def emparejar_por_suma(df, max_combinaciones=3, chunk_size=100):
+def emparejar_por_suma(df, punteo_index, max_combinaciones=4, tolerancia=0.02):
     """
-    Versión optimizada para buscar combinaciones de sumas.
+    Versión optimizada para buscar combinaciones de sumas con mejor rendimiento.
     """
     no_punteados = df[df['Indice_Punteo'].isna()].copy()
-    punteo_index = df['Indice_Punteo'].max() + 1 if df['Indice_Punteo'].notna().any() else 1
     
-    # Eliminamos la ordenación de debe_valores y haber_valores
-    debe_valores = no_punteados[no_punteados['Debe'] > 0]
-    haber_valores = no_punteados[no_punteados['Haber'] > 0]
+    # Ordenamos y filtramos previamente
+    debe_valores = no_punteados[no_punteados['Debe'] > 0].sort_values('Debe', ascending=False)
+    haber_valores = no_punteados[no_punteados['Haber'] > 0].sort_values('Haber', ascending=False)
     
-    # Procesamos por chunks los valores de Haber
+    # Convertimos a arrays numpy para mejor rendimiento
+    debe_array = debe_valores['Debe'].values
+    debe_indices = debe_valores.index.values
+    
+    # Creamos un diccionario para almacenar sumas frecuentes
+    sumas_cache = {}
+    
+    # Procesamos primero los valores más grandes de Haber
     for _, haber_fila in haber_valores.iterrows():
         objetivo = round(haber_fila['Haber'], 2)
         if objetivo == 0:
             continue
             
-        # Filtramos candidatos potenciales
-        candidatos = debe_valores[
-            (debe_valores['Debe'] <= objetivo) & 
-            (debe_valores.index != haber_fila.name)
-        ].head(50)  # Limitamos candidatos para mejor rendimiento
-        
-        if len(candidatos) < 2:
+        # Filtrado más eficiente con tolerancia
+        mask = debe_array <= (objetivo + tolerancia)
+        if not mask.any():
             continue
             
-        # Convertimos a array numpy para cálculos más rápidos
-        valores = candidatos['Debe'].values
+        valores_filtrados = debe_array[mask]
+        indices_filtrados = debe_indices[mask]
         
-        # Buscamos combinaciones eficientemente
-        for n in range(2, min(max_combinaciones + 1, len(valores) + 1)):
-            encontrado = False
-            for comb in combinations(range(len(valores)), n):
-                suma = round(np.sum(valores[list(comb)]), 2)
+        if len(valores_filtrados) < 2:
+            continue
+        
+        # Aumentamos el número de candidatos para más combinaciones
+        n_candidates = min(40, len(valores_filtrados))
+        valores_filtrados = valores_filtrados[:n_candidates]
+        indices_filtrados = indices_filtrados[:n_candidates]
+        
+        # Búsqueda optimizada de combinaciones
+        encontrado = False
+        for n in range(2, min(max_combinaciones + 1, len(valores_filtrados) + 1)):
+            if encontrado:
+                break
                 
-                # Verificamos que la suma sea lo más exacta posible
-                if np.isclose(suma, objetivo, atol=0.01):
-                    indices = candidatos.index[list(comb)]
+            # Usamos el caché de sumas frecuentes
+            key = (tuple(valores_filtrados), n)
+            if key in sumas_cache:
+                combinaciones = sumas_cache[key]
+            else:
+                combinaciones = list(combinations(range(len(valores_filtrados)), n))
+                sumas_cache[key] = combinaciones
+            
+            for comb_indices in combinaciones:
+                suma = round(np.sum(valores_filtrados[list(comb_indices)]), 2)
+                if abs(suma - objetivo) <= tolerancia:
+                    indices = indices_filtrados[list(comb_indices)]
                     if df.loc[indices, 'Indice_Punteo'].isna().all():
-                        # Marcar las filas como punteadas
                         df.loc[indices, 'Indice_Punteo'] = punteo_index
                         df.at[haber_fila.name, 'Indice_Punteo'] = punteo_index
                         punteo_index += 1
                         encontrado = True
                         break
-            if encontrado:
-                break
-                
+    
     return df
 
 def generar_informes(df, archivo):

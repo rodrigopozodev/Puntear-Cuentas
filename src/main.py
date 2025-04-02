@@ -20,18 +20,29 @@ def procesar_archivo(ruta_archivo):
     
     try:
         df = cargar_datos(ruta_archivo)
-        print(f"Registros cargados: {len(df):,}")
+        total_registros = len(df)
+        print(f"Registros cargados: {total_registros:,}")
         
         print("Emparejando valores iguales...")
-        df = emparejar_iguales(df)
+        df, punteo_index = emparejar_iguales(df)
         print(f"Tiempo parcial: {time.time() - inicio:.2f} segundos")
         
         print("Emparejando valores por suma...")
-        df = emparejar_por_suma(df)
+        # Primera pasada con valores más restrictivos
+        df = emparejar_por_suma(df, punteo_index, max_combinaciones=3, tolerancia=0.01)
+        
+        # Segunda pasada con valores más flexibles para los que quedaron sin puntear
+        punteo_index = df['Indice_Punteo'].max() + 1 if df['Indice_Punteo'].notna().any() else 1
+        df = emparejar_por_suma(df, punteo_index, max_combinaciones=4, tolerancia=0.02)
+        
+        # Calculamos el porcentaje de punteo
+        punteados = df['Indice_Punteo'].notna().sum()
+        porcentaje = (punteados / total_registros) * 100
         
         tiempo_total = time.time() - inicio
         memoria_final = psutil.Process().memory_info().rss / 1024 / 1024
         
+        print(f"Registros punteados: {punteados:,} de {total_registros:,} ({porcentaje:.2f}%)")
         print(f"Tiempo total: {tiempo_total:.2f} segundos")
         print(f"Memoria final: {memoria_final:.2f} MB")
         
