@@ -72,7 +72,7 @@ def emparejar_por_suma(df):
                 # Acceder a las filas usando los índices de la combinación de manera correcta
                 suma = round(sum(candidatos.loc[list(combinacion), 'Debe']), 2)
                 if suma == objetivo:
-                    # Aseguramos que solo se asigna un punteo único en cada combinación
+                    # Asignar el índice de punteo a todas las filas de la combinación
                     if df.loc[list(combinacion), 'Indice_Punteo'].isna().all():
                         df.loc[list(combinacion), 'Indice_Punteo'] = punteo_index
                         df.at[i, 'Indice_Punteo'] = punteo_index
@@ -117,7 +117,7 @@ def main(ruta_archivo):
     print("Proceso completado.")
 
 if __name__ == "__main__":
-    archivo = "data/Puntear.xlsx"  # Cambia esto por el archivo de tu elección
+    archivo = "data/puntear1.xlsx"  # Cambia esto por el archivo de tu elección
     if os.path.exists(archivo):
         main(archivo)
     else:
