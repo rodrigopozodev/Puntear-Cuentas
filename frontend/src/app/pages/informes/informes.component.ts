@@ -13,7 +13,6 @@ export class InformesComponent implements OnInit {
   informes: { [folder: string]: InformeFile[] } = {};
   loading = true;
   error: string | null = null;
-Object: any;
 
   constructor(private informesService: InformesService) {}
 
@@ -25,12 +24,12 @@ Object: any;
     this.loading = true;
     this.informesService.getInformes().subscribe({
       next: (files) => {
-        // Agrupar archivos por carpeta
         this.informes = files.reduce((acc, file) => {
-          if (!acc[file.folder]) {
-            acc[file.folder] = [];
+          const folder = file.folder || 'Principal';
+          if (!acc[folder]) {
+            acc[folder] = [];
           }
-          acc[file.folder].push(file);
+          acc[folder].push(file);
           return acc;
         }, {} as { [folder: string]: InformeFile[] });
         this.loading = false;
@@ -41,6 +40,10 @@ Object: any;
         console.error('Error:', err);
       }
     });
+  }
+
+  hasInformes(): boolean {
+    return Object.keys(this.informes || {}).length > 0;
   }
 
   downloadInforme(file: InformeFile) {
@@ -67,7 +70,6 @@ Object: any;
     return `${parseFloat((bytes / Math.pow(1024, i)).toFixed(2))} ${sizes[i]}`;
   }
 
-  // Add this function to handle key iteration in the template
   getInformeKeys(): string[] {
     return Object.keys(this.informes);
   }
