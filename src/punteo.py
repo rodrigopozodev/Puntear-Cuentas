@@ -12,6 +12,9 @@ def emparejar_iguales(df):
     """
     Empareja las filas con 'Debe' y 'Haber' idénticos, asignando un índice de punteo.
     """
+    # Filtrar filas donde 'Debe' o 'Haber' sean 0 o NaN
+    df = df[(df['Debe'] != 0) & (df['Haber'] != 0) & (df['Debe'].notna()) & (df['Haber'].notna())]
+
     df['Indice_Punteo'] = None  # Creamos una nueva columna para los índices de punteo
     punteo_index = 1
 
@@ -34,6 +37,9 @@ def emparejar_por_suma(df):
     """
     Busca combinaciones de sumas en la columna 'Debe' para emparejar con los valores de 'Haber'.
     """
+    # Filtrar filas donde 'Debe' o 'Haber' sean 0 o NaN
+    df = df[(df['Debe'] != 0) & (df['Haber'] != 0) & (df['Debe'].notna()) & (df['Haber'].notna())]
+
     no_punteados = df[df['Indice_Punteo'].isna()].copy()
     punteo_index = df['Indice_Punteo'].max() + 1 if df['Indice_Punteo'].notna().any() else 1
 
@@ -43,6 +49,7 @@ def emparejar_por_suma(df):
 
         for n in range(2, len(candidatos) + 1):
             for combinacion in combinations(candidatos.index, n):
+                # Acceder a las filas usando los índices de la combinación de manera correcta
                 suma = sum(candidatos.loc[list(combinacion), 'Debe'])
                 if suma == objetivo:
                     df.loc[list(combinacion), 'Indice_Punteo'] = punteo_index
