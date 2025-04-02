@@ -65,7 +65,7 @@ def emparejar_por_suma(df):
 
     return df
 
-def generar_informes(df):
+def generar_informes(df, archivo):
     """
     Genera los informes con los datos punteados y no punteados.
     """
@@ -77,35 +77,52 @@ def generar_informes(df):
     emparejados = pd.concat([emparejados['Indice_Punteo'], emparejados.drop(columns='Indice_Punteo')], axis=1)
     no_emparejados = pd.concat([no_emparejados['Indice_Punteo'], no_emparejados.drop(columns='Indice_Punteo')], axis=1)
 
-    # Guardamos los resultados en archivos Excel
-    emparejados.to_excel("informes/punteados.xlsx", index=False)
-    no_emparejados.to_excel("informes/no_punteados.xlsx", index=False)
+    # Creamos la carpeta 'informes' si no existe
+    carpeta_informes = "informes"
+    if not os.path.exists(carpeta_informes):
+        os.makedirs(carpeta_informes)
 
-    print("Informes generados: punteados.xlsx y no_punteados.xlsx")
+    # Usamos el nombre del archivo para crear una subcarpeta
+    nombre_base = os.path.basename(archivo).replace(".xlsx", "")
+    subcarpeta_informes = os.path.join(carpeta_informes, nombre_base)
+    if not os.path.exists(subcarpeta_informes):
+        os.makedirs(subcarpeta_informes)
 
-def main(ruta_archivo):
+    # Se generan los informes para cada archivo
+    emparejados.to_excel(f"{subcarpeta_informes}/{nombre_base}_punteados.xlsx", index=False)
+    no_emparejados.to_excel(f"{subcarpeta_informes}/{nombre_base}_no_punteados.xlsx", index=False)
+
+    print(f"Informes generados para {archivo}: {nombre_base}_punteados.xlsx y {nombre_base}_no_punteados.xlsx")
+
+def main():
     """
     Función principal que orquesta todo el proceso.
     """
-    print("Cargando datos...")
-    df = cargar_datos(ruta_archivo)
+    carpeta_data = "data"  # Carpeta donde se encuentran los archivos Excel
+    archivos = [f for f in os.listdir(carpeta_data) if f.endswith('.xlsx')]
+
+    if not archivos:
+        print(f"No se encontraron archivos Excel en la carpeta {carpeta_data}.")
+        return
     
-    print("Emparejando valores iguales...")
-    df = emparejar_iguales(df)
+    for archivo in archivos:
+        ruta_archivo = os.path.join(carpeta_data, archivo)
+        print(f"\nProcesando archivo: {archivo}")
+        df = cargar_datos(ruta_archivo)
+        
+        print("Emparejando valores iguales...")
+        df = emparejar_iguales(df)
+        
+        print("Emparejando valores por suma...")
+        df = emparejar_por_suma(df)
+        
+        # Aseguramos que los índices de punteo estén ordenados de forma numérica
+        df['Indice_Punteo'] = pd.to_numeric(df['Indice_Punteo'], errors='coerce')
+        df = df.sort_values(by='Indice_Punteo').reset_index(drop=True)
+        
+        generar_informes(df, ruta_archivo)
     
-    print("Emparejando valores por suma...")
-    df = emparejar_por_suma(df)
-    
-    # Aseguramos que los índices de punteo estén ordenados de forma numérica
-    df['Indice_Punteo'] = pd.to_numeric(df['Indice_Punteo'], errors='coerce')
-    df = df.sort_values(by='Indice_Punteo').reset_index(drop=True)
-    
-    generar_informes(df)
     print("Proceso completado.")
 
 if __name__ == "__main__":
-    archivo = "data/puntear1.xlsx"  # Cambia esto por el archivo de tu elección
-    if os.path.exists(archivo):
-        main(archivo)
-    else:
-        print(f"El archivo {archivo} no se encuentra.")
+    main()
