@@ -72,9 +72,11 @@ def emparejar_por_suma(df):
                 # Acceder a las filas usando los índices de la combinación de manera correcta
                 suma = sum(candidatos.loc[list(combinacion), 'Debe'])
                 if suma == objetivo:
-                    df.loc[list(combinacion), 'Indice_Punteo'] = punteo_index
-                    df.at[i, 'Indice_Punteo'] = punteo_index
-                    punteo_index += 1
+                    # Aseguramos que solo se asigna un punteo único en cada combinación
+                    if df.loc[list(combinacion), 'Indice_Punteo'].isna().all():
+                        df.loc[list(combinacion), 'Indice_Punteo'] = punteo_index
+                        df.at[i, 'Indice_Punteo'] = punteo_index
+                        punteo_index += 1
                     break
 
     return df
