@@ -1,6 +1,11 @@
 import os
-from src.utils import cargar_datos
-from src.punteo import emparejar_iguales, emparejar_por_suma
+import sys
+
+# Añadimos la carpeta src al PYTHONPATH para que las importaciones funcionen correctamente
+sys.path.append('./src')  # Asegúrate de que src está en la ruta correcta
+
+from utils import cargar_datos
+from punteo import emparejar_iguales, emparejar_por_suma
 
 def generar_informes(df):
     """
