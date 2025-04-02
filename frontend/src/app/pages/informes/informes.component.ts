@@ -11,11 +11,11 @@ import { InformesService, InformeFile, ExcelData } from '../../services/informes
 })
 export class InformesComponent implements OnInit {
   informes: { [folder: string]: InformeFile[] } = {};
-  loading = true;
-  error: string | null = null;
   selectedFile: InformeFile | null = null;
   excelData: ExcelData | null = null;
-  loadingData = false;
+  loading = true;
+  loadingData = false; // Añadida esta propiedad
+  error: string | null = null;
 
   constructor(private informesService: InformesService) {}
 
@@ -45,6 +45,10 @@ export class InformesComponent implements OnInit {
     });
   }
 
+  getFiles(): InformeFile[] {
+    return Object.values(this.informes).flat();
+  }
+
   hasInformes(): boolean {
     return Object.keys(this.informes || {}).length > 0;
   }
@@ -67,10 +71,11 @@ export class InformesComponent implements OnInit {
   }
 
   formatSize(bytes: number): string {
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     if (bytes === 0) return '0 Bytes';
-    const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return `${parseFloat((bytes / Math.pow(1024, i)).toFixed(2))} ${sizes[i]}`;
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
   }
 
   getInformeKeys(): string[] {
@@ -78,21 +83,17 @@ export class InformesComponent implements OnInit {
   }
 
   viewExcelContent(file: InformeFile) {
-    console.log('Abriendo archivo:', file.name); // Para debugging
     this.selectedFile = file;
-    this.loadingData = true;
-    this.excelData = null; // Reset datos anteriores
-
+    this.loadingData = true; // Activamos el loading
     this.informesService.getExcelContent(file.path).subscribe({
       next: (data) => {
-        console.log('Datos recibidos:', data); // Para debugging
         this.excelData = data;
-        this.loadingData = false;
+        this.loadingData = false; // Desactivamos el loading al recibir los datos
       },
       error: (err) => {
         console.error('Error al cargar datos:', err);
-        this.loadingData = false;
-        this.selectedFile = null;
+        this.error = 'Error al cargar los datos del archivo';
+        this.loadingData = false; // Desactivamos el loading en caso de error
       }
     });
   }
