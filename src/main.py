@@ -2,21 +2,14 @@ import os
 import shutil
 import sys
 import time
-import psutil
 from tqdm import tqdm
+
 
 # Añadimos la carpeta src al PYTHONPATH
 sys.path.append('./src')
 
 from utils import cargar_datos, crear_directorio
 from punteo import emparejar_iguales, emparejar_por_suma, generar_informes
-
-def create_output_folder(filename):
-    # Quitar la generación del timestamp
-    folder_name = os.path.splitext(filename)[0]
-    output_folder = os.path.join('informes', folder_name)
-    os.makedirs(output_folder, exist_ok=True)
-    return output_folder
 
 def procesar_archivo(ruta_archivo):
     """Procesa un archivo con múltiples pasadas."""
