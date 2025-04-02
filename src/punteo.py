@@ -44,9 +44,9 @@ def emparejar_por_suma(df, max_combinaciones=3, chunk_size=100):
     no_punteados = df[df['Indice_Punteo'].isna()].copy()
     punteo_index = df['Indice_Punteo'].max() + 1 if df['Indice_Punteo'].notna().any() else 1
     
-    # Ordenamos por valor para optimizar búsqueda
-    debe_valores = no_punteados[no_punteados['Debe'] > 0].sort_values('Debe', ascending=False)
-    haber_valores = no_punteados[no_punteados['Haber'] > 0].sort_values('Haber', ascending=False)
+    # Eliminamos la ordenación de debe_valores y haber_valores
+    debe_valores = no_punteados[no_punteados['Debe'] > 0]
+    haber_valores = no_punteados[no_punteados['Haber'] > 0]
     
     # Procesamos por chunks los valores de Haber
     for _, haber_fila in haber_valores.iterrows():
@@ -86,9 +86,8 @@ def emparejar_por_suma(df, max_combinaciones=3, chunk_size=100):
 
 def generar_informes(df, archivo):
     """Genera los informes con los datos punteados y no punteados."""
-    # Ordenamos el DataFrame por Indice_Punteo
+    # Eliminamos la ordenación por Indice_Punteo
     df['Indice_Punteo'] = pd.to_numeric(df['Indice_Punteo'], errors='coerce')
-    df = df.sort_values(by='Indice_Punteo')
 
     # Filtramos los datos
     emparejados = df[df['Indice_Punteo'].notna()]
