@@ -11,6 +11,11 @@ export interface InformeFile {
   createdAt: Date;
 }
 
+export interface ExcelData {
+  headers: string[];
+  rows: any[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -32,6 +37,12 @@ export class InformesService {
     return this.http.get(`${this.API_URL}/informes/download`, {
       params: { path },
       responseType: 'blob'
+    });
+  }
+
+  getExcelContent(path: string): Observable<ExcelData> {
+    return this.http.get<ExcelData>(`${this.API_URL}/informes/content`, {
+      params: { path }
     });
   }
 }

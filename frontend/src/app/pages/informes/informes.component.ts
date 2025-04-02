@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
-import { InformesService, InformeFile } from '../../services/informes.service';
+import { InformesService, InformeFile, ExcelData } from '../../services/informes.service';
 
 @Component({
   selector: 'app-informes',
@@ -13,6 +13,9 @@ export class InformesComponent implements OnInit {
   informes: { [folder: string]: InformeFile[] } = {};
   loading = true;
   error: string | null = null;
+  selectedFile: InformeFile | null = null;
+  excelData: ExcelData | null = null;
+  loadingData = false;
 
   constructor(private informesService: InformesService) {}
 
@@ -72,5 +75,25 @@ export class InformesComponent implements OnInit {
 
   getInformeKeys(): string[] {
     return Object.keys(this.informes);
+  }
+
+  viewExcelContent(file: InformeFile) {
+    this.selectedFile = file;
+    this.loadingData = true;
+    this.informesService.getExcelContent(file.path).subscribe({
+      next: (data) => {
+        this.excelData = data;
+        this.loadingData = false;
+      },
+      error: (err) => {
+        console.error('Error al cargar datos:', err);
+        this.loadingData = false;
+      }
+    });
+  }
+
+  closeModal() {
+    this.selectedFile = null;
+    this.excelData = null;
   }
 }
