@@ -18,7 +18,8 @@ const storage = multer.diskStorage({
     cb(null, savePath);
   },
   filename: function (req, file, cb) {
-    cb(null, Date.now() + '-' + file.originalname);
+    // Quitar el timestamp y usar solo el nombre original
+    cb(null, file.originalname);
   }
 });
 
