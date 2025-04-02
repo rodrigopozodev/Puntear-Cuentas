@@ -32,7 +32,7 @@ def main(ruta_archivo):
     print("Proceso completado.")
 
 if __name__ == "__main__":
-    archivo = "data/archivo.xlsx"  # Cambia esto por el archivo de tu elección
+    archivo = "data/Puntear.xlsx"  # Cambia esto por el archivo de tu elección
     if os.path.exists(archivo):
         main(archivo)
     else:
