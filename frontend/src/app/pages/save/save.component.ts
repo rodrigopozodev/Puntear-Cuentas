@@ -1,58 +1,39 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient, HttpEventType } from '@angular/common/http';
+import { HttpClientModule } from '@angular/common/http';
+import { FileService } from '../../services/file.service';
 
 @Component({
   selector: 'app-save',
   standalone: true,
-  imports: [CommonModule],
-  templateUrl: './save.component.html'
+  imports: [CommonModule, HttpClientModule],
+  template: `
+    <div class="p-4">
+      <div *ngIf="status" class="mt-4 p-4 rounded" [ngClass]="statusClass">
+        {{ statusMessage }}
+      </div>
+    </div>
+  `
 })
 export class SaveComponent {
-  selectedFile: File | null = null;
-  uploadProgress: number = 0;
-  uploadStatus: 'idle' | 'uploading' | 'success' | 'error' = 'idle';
+  status: 'success' | 'error' | null = null;
+  statusMessage = '';
+  statusClass = '';
 
-  constructor(private http: HttpClient) {}
+  constructor(private fileService: FileService) {}
 
-  onFileSelected(event: any) {
-    const file = event.target.files[0];
-    if (file && this.isExcelFile(file)) {
-      this.selectedFile = file;
-      this.uploadStatus = 'idle';
-    } else {
-      alert('Por favor, seleccione un archivo Excel válido (.xlsx, .xls)');
-    }
-  }
-
-  isExcelFile(file: File): boolean {
-    return file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || 
-           file.type === 'application/vnd.ms-excel';
-  }
-
-  uploadFile() {
-    if (!this.selectedFile) return;
-
-    const formData = new FormData();
-    formData.append('file', this.selectedFile);
-
-    this.uploadStatus = 'uploading';
-    
-    this.http.post('http://localhost:3000/upload', formData, {
-      reportProgress: true,
-      observe: 'events'
-    }).subscribe({
-      next: (event) => {
-        if (event.type === HttpEventType.UploadProgress && event.total) {
-          this.uploadProgress = Math.round(100 * event.loaded / event.total);
-        }
-        if (event.type === HttpEventType.Response) {
-          this.uploadStatus = 'success';
-        }
+  saveExcel(file: File) {
+    this.fileService.saveExcelToFolder(file).subscribe({
+      next: (response) => {
+        this.status = 'success';
+        this.statusMessage = 'Archivo guardado exitosamente';
+        this.statusClass = 'bg-green-100 text-green-800';
       },
       error: (error) => {
-        console.error('Error al subir el archivo:', error);
-        this.uploadStatus = 'error';
+        this.status = 'error';
+        this.statusMessage = 'Error al guardar el archivo';
+        this.statusClass = 'bg-red-100 text-red-800';
+        console.error('Error:', error);
       }
     });
   }
