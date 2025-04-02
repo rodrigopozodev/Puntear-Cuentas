@@ -30,7 +30,7 @@
             <div *ngFor="let file of folder.value" 
                  class="bg-white/5 hover:bg-white/10 transition-all duration-300 rounded-lg p-4">
               <div class="flex items-start justify-between">
-                <div class="flex-1">
+                <div class="flex-1 cursor-pointer" (click)="viewExcelContent(file)">
                   <p class="text-white font-medium truncate">{{ file.name }}</p>
                   <p class="text-white/60 text-sm">{{ formatSize(file.size) }}</p>
                   <p class="text-white/60 text-sm">{{ file.createdAt | date:'dd/MM/yyyy HH:mm' }}</p>
@@ -53,6 +53,53 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
         <p>No hay informes disponibles</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para mostrar datos del Excel -->
+<div *ngIf="selectedFile" 
+     class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+  <div class="bg-white rounded-xl shadow-xl max-w-6xl w-full mx-4 max-h-[90vh] overflow-hidden">
+    <div class="p-6 border-b">
+      <div class="flex justify-between items-center">
+        <h3 class="text-xl font-semibold text-gray-900">{{ selectedFile.name }}</h3>
+        <button (click)="closeModal()" class="text-gray-500 hover:text-gray-700">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="p-6 overflow-auto max-h-[calc(90vh-12rem)]">
+      <!-- Loading state -->
+      <div *ngIf="loadingData" class="flex justify-center items-center py-12">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+      </div>
+
+      <!-- Excel data -->
+      <div *ngIf="excelData && !loadingData" class="relative overflow-x-auto">
+        <table class="w-full text-sm text-left text-gray-700">
+          <thead class="text-xs uppercase bg-gray-100">
+            <tr>
+              <th *ngFor="let header of excelData.headers" 
+                  class="px-6 py-3 font-medium">
+                {{ header }}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of excelData.rows" 
+                class="border-b hover:bg-gray-50">
+              <td *ngFor="let header of excelData.headers" 
+                  class="px-6 py-4 whitespace-nowrap">
+                {{ row[header] }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>

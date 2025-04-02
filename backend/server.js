@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const { exec } = require('child_process');
 const fsPromises = require('fs').promises;
+const xlsx = require('xlsx');
 
 const app = express();
 app.use(cors());
@@ -100,6 +101,30 @@ app.get('/informes/download', async (req, res) => {
   } catch (error) {
     console.error('Error al descargar archivo:', error);
     res.status(500).json({ error: 'Error al descargar el archivo' });
+  }
+});
+
+app.get('/informes/content', async (req, res) => {
+  try {
+    const filePath = req.query.path;
+    if (!filePath) {
+      return res.status(400).json({ error: 'No se proporcionó la ruta del archivo' });
+    }
+
+    const workbook = xlsx.readFile(filePath);
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const jsonData = xlsx.utils.sheet_to_json(worksheet);
+
+    const headers = Object.keys(jsonData[0] || {});
+    
+    res.json({
+      headers,
+      rows: jsonData
+    });
+  } catch (error) {
+    console.error('Error al leer Excel:', error);
+    res.status(500).json({ error: 'Error al leer el archivo Excel' });
   }
 });
 
