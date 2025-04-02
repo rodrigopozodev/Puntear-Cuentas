@@ -43,10 +43,10 @@ def emparejar_por_suma(df):
 
         for n in range(2, len(candidatos) + 1):
             for combinacion in combinations(candidatos.index, n):
-                # Acceder a las filas usando los índices de la combinación
-                suma = sum(candidatos.loc[combinacion, 'Debe'].values)  # .values para obtener los valores directamente
+                # Acceder a las filas usando los índices de la combinación de manera correcta
+                suma = sum(candidatos.loc[list(combinacion), 'Debe'])
                 if suma == objetivo:
-                    df.loc[combinacion, 'Indice_Punteo'] = punteo_index
+                    df.loc[list(combinacion), 'Indice_Punteo'] = punteo_index
                     df.at[i, 'Indice_Punteo'] = punteo_index
                     punteo_index += 1
                     break
