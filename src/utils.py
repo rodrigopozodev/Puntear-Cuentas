@@ -1,12 +1,14 @@
 import pandas as pd
 
-def cargar_datos(ruta_archivo):
-    """
-    Carga los datos del archivo Excel y filtra las columnas relevantes.
-    Elimina filas con valores 0 en las columnas 'Debe' o 'Haber'.
-    """
-    df = pd.read_excel(ruta_archivo)
-    # Filtramos las columnas relevantes y eliminamos filas con valores 0
-    df = df[['Fecha', 'Debe', 'Haber']]  # Asegúrate de que estas columnas sean correctas
-    df = df[(df['Debe'] != 0) | (df['Haber'] != 0)]  # Ignorar filas con valores 0
+def cargar_datos(archivo):
+    # Cargar el archivo Excel
+    df = pd.read_excel(archivo)
+
+    # Muestra las primeras filas y las columnas para depuración (esto es opcional)
+    # print("Columnas disponibles:", df.columns)
+    # print("Primeras filas:", df.head())
+
+    # Filtra las columnas necesarias sin la columna 'Fecha'
+    df = df[['Debe', 'Haber']]  # Filtramos solo 'Debe' y 'Haber'
+
     return df
