@@ -4,6 +4,7 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const { exec } = require('child_process');
+const fsPromises = require('fs').promises;
 
 const app = express();
 app.use(cors());
@@ -55,7 +56,53 @@ app.post('/execute-python', (req, res) => {
   });
 });
 
+async function getFilesRecursively(dir) {
+  const items = await fsPromises.readdir(dir, { withFileTypes: true });
+  let files = [];
+
+  for (const item of items) {
+    const fullPath = path.join(dir, item.name);
+    if (item.isDirectory()) {
+      files = files.concat(await getFilesRecursively(fullPath));
+    } else if (item.isFile() && (item.name.endsWith('.xlsx') || item.name.endsWith('.xls'))) {
+      const stats = await fsPromises.stat(fullPath);
+      files.push({
+        name: item.name,
+        path: fullPath,
+        folder: path.relative('C:/Users/rodri/Desktop/Mis Proyectos/Puntear Cuentas/informes', dir),
+        size: stats.size,
+        createdAt: stats.birthtime
+      });
+    }
+  }
+  return files;
+}
+
+app.get('/informes', async (req, res) => {
+  try {
+    const informesPath = 'C:/Users/rodri/Desktop/Mis Proyectos/Puntear Cuentas/informes';
+    const files = await getFilesRecursively(informesPath);
+    res.json(files);
+  } catch (error) {
+    console.error('Error al leer informes:', error);
+    res.status(500).json({ error: 'Error al leer los informes' });
+  }
+});
+
+app.get('/informes/download', async (req, res) => {
+  try {
+    const filePath = req.query.path;
+    if (!filePath) {
+      return res.status(400).json({ error: 'No se proporcionó la ruta del archivo' });
+    }
+    res.download(filePath);
+  } catch (error) {
+    console.error('Error al descargar archivo:', error);
+    res.status(500).json({ error: 'Error al descargar el archivo' });
+  }
+});
+
 const PORT = 3000;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
