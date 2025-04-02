@@ -36,15 +36,47 @@ def emparejar_por_suma(df):
 
         for n in range(2, len(candidatos) + 1):
             for combinacion in combinations(candidatos.index, n):
-                suma = 0
-                for idx in combinacion:
-                    suma += candidatos.loc[idx, 'Debe']  # Accedemos a las filas de manera individual
-
-                if abs(suma - objetivo) < 0.01:  # Compara la suma con 'Haber', permitiendo un pequeño margen de error
-                    # Asigna el índice de punteo a las filas de la combinación y a la fila original
+                suma = sum(candidatos.loc[combinacion, 'Debe'])  # Aquí corregimos el acceso a las filas
+                if suma == objetivo:
                     df.loc[combinacion, 'Indice_Punteo'] = punteo_index
                     df.at[i, 'Indice_Punteo'] = punteo_index
                     punteo_index += 1
                     break
 
     return df
+
+def generar_informes(df):
+    """
+    Genera los informes con los datos punteados y no punteados, incluyendo todas las columnas del DataFrame.
+    """
+    emparejados = df[df['Indice_Punteo'].notna()]
+    no_emparejados = df[df['Indice_Punteo'].isna()]
+
+    # Guardamos los resultados en archivos Excel con todas las columnas
+    emparejados.to_excel("informes/punteados.xlsx", index=False)
+    no_emparejados.to_excel("informes/no_punteados.xlsx", index=False)
+
+    print("Informes generados: punteados.xlsx y no_punteados.xlsx")
+
+def main(ruta_archivo):
+    """
+    Función principal que orquesta todo el proceso.
+    """
+    print("Cargando datos...")
+    df = cargar_datos(ruta_archivo)
+    
+    print("Emparejando valores iguales...")
+    df = emparejar_iguales(df)
+    
+    print("Emparejando valores por suma...")
+    df = emparejar_por_suma(df)
+    
+    generar_informes(df)
+    print("Proceso completado.")
+
+if __name__ == "__main__":
+    archivo = "data/Puntear.xlsx"  # Cambia esto por el archivo de tu elección
+    if os.path.exists(archivo):
+        main(archivo)
+    else:
+        print(f"El archivo {archivo} no se encuentra.")
