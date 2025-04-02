@@ -35,9 +35,13 @@ app.post('/save-excel', upload.single('file'), (req, res) => {
 });
 
 app.post('/execute-python', (req, res) => {
-  const pythonScript = path.join('C:', 'Users', 'rodri', 'Desktop', 'Mis Proyectos', 'Puntear Cuentas', 'src', 'main.py');
+  // Directorio base del proyecto
+  const projectDir = 'C:/Users/rodri/Desktop/Mis Proyectos/Puntear Cuentas';
   
-  exec(`python "${pythonScript}"`, (error, stdout, stderr) => {
+  // Cambiar al directorio del proyecto y ejecutar el comando
+  exec('cd "' + projectDir + '" && python src/main.py', {
+    shell: 'C:\\Program Files\\Git\\bin\\bash.exe'  // Usar Git Bash
+  }, (error, stdout, stderr) => {
     if (error) {
       console.error(`Error ejecutando Python: ${error}`);
       return res.status(500).send(error);

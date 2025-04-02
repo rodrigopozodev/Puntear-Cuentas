@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { FileService } from '../../services/file.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-save',
@@ -23,7 +24,8 @@ export class SaveComponent {
 
   constructor(
     private fileService: FileService,
-    private http: HttpClient
+    private http: HttpClient,
+    private router: Router
   ) {}
 
   saveExcel(file: File) {
@@ -45,7 +47,11 @@ export class SaveComponent {
 
   private executePythonScript() {
     this.http.post(this.PYTHON_API, {}).subscribe({
-      next: (response) => console.log('Script Python ejecutado:', response),
+      next: (response) => {
+        console.log('Script Python ejecutado:', response);
+        // Navegar a la página de informes después de que Python termine
+        this.router.navigate(['/informes']);
+      },
       error: (err) => console.error('Error ejecutando script Python:', err)
     });
   }
