@@ -55,10 +55,16 @@ def emparejar_por_suma(df):
 
 def generar_informes(df):
     """
-    Genera los informes con los datos punteados y no punteados, incluyendo todas las columnas del DataFrame.
+    Genera los informes con los datos punteados y no punteados, incluyendo todas las columnas del DataFrame
+    con la columna Indice_Punteo en la primera posición.
     """
+    # Filtramos los datos emparejados y no emparejados, pero conservamos todas las columnas
     emparejados = df[df['Indice_Punteo'].notna()]
     no_emparejados = df[df['Indice_Punteo'].isna()]
+
+    # Insertamos la columna 'Indice_Punteo' al principio del DataFrame
+    emparejados.insert(0, 'Indice_Punteo', emparejados['Indice_Punteo'])
+    no_emparejados.insert(0, 'Indice_Punteo', no_emparejados['Indice_Punteo'])
 
     # Guardamos los resultados en archivos Excel con todas las columnas
     emparejados.to_excel("informes/punteados.xlsx", index=False)
