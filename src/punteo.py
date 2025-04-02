@@ -1,57 +1,87 @@
-import pandas as pd
 import os
+import pandas as pd
+import numpy as np
 from itertools import combinations
 from utils import cargar_datos, crear_directorio
 
 def emparejar_iguales(df):
     """
-    Empareja las filas con 'Debe' y 'Haber' idénticos.
+    Versión optimizada para emparejar valores iguales usando vectorización.
     """
     df['Indice_Punteo'] = None
     punteo_index = 1
     
-    for i, fila in df[df['Indice_Punteo'].isna()].iterrows():
-        if fila['Debe'] == 0 and fila['Haber'] != 0:
-            coincidencia = df[(df['Debe'] == fila['Haber']) & (df['Indice_Punteo'].isna())]
-        elif fila['Haber'] == 0 and fila['Debe'] != 0:
-            coincidencia = df[(df['Haber'] == fila['Debe']) & (df['Indice_Punteo'].isna())]
-        elif round(fila['Debe'], 2) == round(fila['Haber'], 2) and fila['Debe'] != 0:
-            coincidencia = df[(round(df['Debe'], 2) == round(fila['Haber'], 2)) & (df['Indice_Punteo'].isna())]
-        else:
-            continue
-
-        if not coincidencia.empty:
-            idx = coincidencia.index[0]
-            df.at[i, 'Indice_Punteo'] = punteo_index
-            df.at[idx, 'Indice_Punteo'] = punteo_index
-            punteo_index += 1
+    # Creamos máscaras para filtrado eficiente
+    no_punteados = df['Indice_Punteo'].isna()
     
+    # Procesamos por lotes para mejor rendimiento
+    while no_punteados.any():
+        fila = df[no_punteados].iloc[0]
+        
+        if fila['Debe'] > 0 and fila['Haber'] == 0:
+            mask = (df['Haber'] == fila['Debe']) & no_punteados & (df.index != fila.name)
+        elif fila['Haber'] > 0 and fila['Debe'] == 0:
+            mask = (df['Debe'] == fila['Haber']) & no_punteados & (df.index != fila.name)
+        else:
+            no_punteados[fila.name] = False
+            continue
+            
+        if mask.any():
+            idx_match = df[mask].index[0]
+            df.loc[[fila.name, idx_match], 'Indice_Punteo'] = punteo_index
+            punteo_index += 1
+            no_punteados[fila.name] = False
+            no_punteados[idx_match] = False
+        else:
+            no_punteados[fila.name] = False
+            
     return df
 
-def emparejar_por_suma(df):
+def emparejar_por_suma(df, max_combinaciones=3, chunk_size=100):
     """
-    Busca combinaciones de sumas en la columna 'Debe' para emparejar con 'Haber'.
+    Versión optimizada para buscar combinaciones de sumas.
     """
     no_punteados = df[df['Indice_Punteo'].isna()].copy()
     punteo_index = df['Indice_Punteo'].max() + 1 if df['Indice_Punteo'].notna().any() else 1
-
-    for i, fila in no_punteados.iterrows():
-        if fila['Debe'] == 0 and fila['Haber'] == 0:
+    
+    # Ordenamos por valor para optimizar búsqueda
+    debe_valores = no_punteados[no_punteados['Debe'] > 0].sort_values('Debe', ascending=False)
+    haber_valores = no_punteados[no_punteados['Haber'] > 0].sort_values('Haber', ascending=False)
+    
+    # Procesamos por chunks los valores de Haber
+    for _, haber_fila in haber_valores.iterrows():
+        objetivo = round(haber_fila['Haber'], 2)
+        if objetivo == 0:
             continue
+            
+        # Filtramos candidatos potenciales
+        candidatos = debe_valores[
+            (debe_valores['Debe'] <= objetivo) & 
+            (debe_valores.index != haber_fila.name)
+        ].head(50)  # Limitamos candidatos para mejor rendimiento
         
-        objetivo = round(fila['Haber'], 2)
-        candidatos = no_punteados[no_punteados['Debe'] > 0]
-
-        for n in range(2, len(candidatos) + 1):
-            for combinacion in combinations(candidatos.index, n):
-                suma = round(sum(candidatos.loc[list(combinacion), 'Debe']), 2)
+        if len(candidatos) < 2:
+            continue
+            
+        # Convertimos a array numpy para cálculos más rápidos
+        valores = candidatos['Debe'].values
+        
+        # Buscamos combinaciones eficientemente
+        for n in range(2, min(max_combinaciones + 1, len(valores) + 1)):
+            encontrado = False
+            for comb in combinations(range(len(valores)), n):
+                suma = round(np.sum(valores[list(comb)]), 2)
                 if suma == objetivo:
-                    if df.loc[list(combinacion), 'Indice_Punteo'].isna().all():
-                        df.loc[list(combinacion), 'Indice_Punteo'] = punteo_index
-                        df.at[i, 'Indice_Punteo'] = punteo_index
+                    indices = candidatos.index[list(comb)]
+                    if df.loc[indices, 'Indice_Punteo'].isna().all():
+                        df.loc[indices, 'Indice_Punteo'] = punteo_index
+                        df.at[haber_fila.name, 'Indice_Punteo'] = punteo_index
                         punteo_index += 1
-                    break
-
+                        encontrado = True
+                        break
+            if encontrado:
+                break
+                
     return df
 
 def generar_informes(df, archivo):
