@@ -71,9 +71,12 @@ def emparejar_por_suma(df, max_combinaciones=3, chunk_size=100):
             encontrado = False
             for comb in combinations(range(len(valores)), n):
                 suma = round(np.sum(valores[list(comb)]), 2)
-                if suma == objetivo:
+                
+                # Verificamos que la suma sea lo más exacta posible
+                if np.isclose(suma, objetivo, atol=0.01):
                     indices = candidatos.index[list(comb)]
                     if df.loc[indices, 'Indice_Punteo'].isna().all():
+                        # Marcar las filas como punteadas
                         df.loc[indices, 'Indice_Punteo'] = punteo_index
                         df.at[haber_fila.name, 'Indice_Punteo'] = punteo_index
                         punteo_index += 1
@@ -107,32 +110,3 @@ def generar_informes(df, archivo):
     no_emparejados.to_excel(f"{subcarpeta_informes}/{nombre_base}_no_punteados.xlsx", index=False)
 
     print(f"Informes generados para {archivo}: {nombre_base}_punteados.xlsx y {nombre_base}_no_punteados.xlsx")
-
-def main():
-    """
-    Función principal que orquesta todo el proceso.
-    """
-    carpeta_data = "data"  # Carpeta donde se encuentran los archivos Excel
-    archivos = [f for f in os.listdir(carpeta_data) if f.endswith('.xlsx')]
-
-    if not archivos:
-        print(f"No se encontraron archivos Excel en la carpeta {carpeta_data}.")
-        return
-    
-    for archivo in archivos:
-        ruta_archivo = os.path.join(carpeta_data, archivo)
-        print(f"\nProcesando archivo: {archivo}")
-        df = cargar_datos(ruta_archivo)
-        
-        print("Emparejando valores iguales...")
-        df = emparejar_iguales(df)
-        
-        print("Emparejando valores por suma...")
-        df = emparejar_por_suma(df)
-        
-        generar_informes(df, ruta_archivo)
-    
-    print("Proceso completado.")
-
-if __name__ == "__main__":
-    main()
