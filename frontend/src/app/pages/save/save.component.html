@@ -1,1 +1,55 @@
-<p>save works!</p>
+<div class="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-xl p-8">
+        <h2 class="text-3xl font-bold text-gray-900 mb-8 text-center">Subir Archivo Excel</h2>
+        
+        <div class="space-y-6">
+            <!-- Área de drag and drop -->
+            <div 
+                class="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center cursor-pointer hover:border-purple-500 transition-colors"
+                (click)="fileInput.click()">
+                <input
+                    #fileInput
+                    type="file"
+                    class="hidden"
+                    accept=".xlsx,.xls"
+                    (change)="onFileSelected($event)">
+                
+                <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                
+                <p class="mt-4 text-sm text-gray-600">
+                    Arrastra y suelta tu archivo Excel aquí o
+                    <span class="text-purple-600 font-medium">selecciona un archivo</span>
+                </p>
+            </div>
+
+            <!-- Archivo seleccionado -->
+            <div *ngIf="selectedFile" class="bg-gray-50 p-4 rounded-lg">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-700">{{ selectedFile.name }}</span>
+                    <span class="text-xs text-gray-500">{{ (selectedFile.size / 1024 / 1024).toFixed(2) }} MB</span>
+                </div>
+            </div>
+
+            <!-- Barra de progreso -->
+            <div *ngIf="uploadStatus === 'uploading'" class="w-full bg-gray-200 rounded-full h-2.5">
+                <div class="bg-purple-600 h-2.5 rounded-full" [style.width]="uploadProgress + '%'"></div>
+            </div>
+
+            <!-- Mensajes de estado -->
+            <div [ngSwitch]="uploadStatus" class="text-center">
+                <p *ngSwitchCase="'success'" class="text-green-600">¡Archivo subido exitosamente!</p>
+                <p *ngSwitchCase="'error'" class="text-red-600">Error al subir el archivo. Intente nuevamente.</p>
+            </div>
+
+            <!-- Botón de subida -->
+            <button
+                (click)="uploadFile()"
+                [disabled]="!selectedFile || uploadStatus === 'uploading'"
+                class="w-full py-3 px-4 border border-transparent rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                {{ uploadStatus === 'uploading' ? 'Subiendo...' : 'Subir Archivo' }}
+            </button>
+        </div>
+    </div>
+</div>
