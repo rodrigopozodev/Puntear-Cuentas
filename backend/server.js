@@ -3,6 +3,7 @@ const multer = require('multer');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const { exec } = require('child_process');
 
 const app = express();
 app.use(cors());
@@ -31,6 +32,23 @@ app.post('/save-excel', upload.single('file'), (req, res) => {
   } catch (error) {
     res.status(500).send(error.message);
   }
+});
+
+app.post('/execute-python', (req, res) => {
+  const pythonScript = path.join('C:', 'Users', 'rodri', 'Desktop', 'Mis Proyectos', 'Puntear Cuentas', 'src', 'main.py');
+  
+  exec(`python "${pythonScript}"`, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Error ejecutando Python: ${error}`);
+      return res.status(500).send(error);
+    }
+    if (stderr) {
+      console.error(`stderr: ${stderr}`);
+      return res.status(500).send(stderr);
+    }
+    console.log(`stdout: ${stdout}`);
+    res.send({ output: stdout });
+  });
 });
 
 const PORT = 3000;
