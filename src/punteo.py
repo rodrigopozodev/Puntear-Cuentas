@@ -41,8 +41,8 @@ def emparejar_iguales(df):
             continue
 
         # Buscar filas donde 'Debe' es igual a 'Haber' y no han sido punteadas
-        if fila['Debe'] == fila['Haber'] and fila['Debe'] != 0:
-            coincidencia = df[(df['Debe'] == fila['Haber']) & (df['Indice_Punteo'].isna())]
+        if round(fila['Debe'], 2) == round(fila['Haber'], 2) and fila['Debe'] != 0:
+            coincidencia = df[(round(df['Debe'], 2) == round(fila['Haber'], 2)) & (df['Indice_Punteo'].isna())]
             if not coincidencia.empty:
                 idx = coincidencia.index[0]
                 df.at[i, 'Indice_Punteo'] = punteo_index
@@ -64,13 +64,13 @@ def emparejar_por_suma(df):
         if fila['Debe'] == 0 and fila['Haber'] == 0:
             continue
 
-        objetivo = fila['Haber']
+        objetivo = round(fila['Haber'], 2)
         candidatos = no_punteados[no_punteados['Debe'] > 0]
 
         for n in range(2, len(candidatos) + 1):
             for combinacion in combinations(candidatos.index, n):
                 # Acceder a las filas usando los índices de la combinación de manera correcta
-                suma = sum(candidatos.loc[list(combinacion), 'Debe'])
+                suma = round(sum(candidatos.loc[list(combinacion), 'Debe']), 2)
                 if suma == objetivo:
                     # Aseguramos que solo se asigna un punteo único en cada combinación
                     if df.loc[list(combinacion), 'Indice_Punteo'].isna().all():
