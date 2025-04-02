@@ -11,10 +11,8 @@ def cargar_datos(ruta_archivo):
 def emparejar_iguales(df):
     """
     Empareja las filas con 'Debe' y 'Haber' idénticos, asignando un índice de punteo.
+    Ignora las celdas con valor 0.00 en las columnas 'Debe' y 'Haber', pero no ignora la fila completa.
     """
-    # Filtrar filas donde 'Debe' o 'Haber' sean 0 o NaN
-    df = df[(df['Debe'] != 0) & (df['Haber'] != 0) & (df['Debe'].notna()) & (df['Haber'].notna())]
-
     df['Indice_Punteo'] = None  # Creamos una nueva columna para los índices de punteo
     punteo_index = 1
 
@@ -22,28 +20,50 @@ def emparejar_iguales(df):
         if pd.notna(fila['Indice_Punteo']):
             continue  # Si ya está punteado, saltamos a la siguiente fila
 
-        # Buscar filas donde 'Debe' es igual a 'Haber' y no han sido punteadas
-        coincidencia = df[(df['Debe'] == fila['Haber']) & (df['Indice_Punteo'].isna())]
+        # Si la columna 'Debe' tiene 0, pero 'Haber' tiene valor, se empareja por 'Haber'
+        if fila['Debe'] == 0 and fila['Haber'] != 0:
+            coincidencia = df[(df['Debe'] == fila['Haber']) & (df['Indice_Punteo'].isna())]
+            if not coincidencia.empty:
+                idx = coincidencia.index[0]
+                df.at[i, 'Indice_Punteo'] = punteo_index
+                df.at[idx, 'Indice_Punteo'] = punteo_index
+                punteo_index += 1
+            continue
 
-        if not coincidencia.empty:
-            idx = coincidencia.index[0]
-            df.at[i, 'Indice_Punteo'] = punteo_index
-            df.at[idx, 'Indice_Punteo'] = punteo_index
-            punteo_index += 1
+        # Si la columna 'Haber' tiene 0, pero 'Debe' tiene valor, se empareja por 'Debe'
+        if fila['Haber'] == 0 and fila['Debe'] != 0:
+            coincidencia = df[(df['Haber'] == fila['Debe']) & (df['Indice_Punteo'].isna())]
+            if not coincidencia.empty:
+                idx = coincidencia.index[0]
+                df.at[i, 'Indice_Punteo'] = punteo_index
+                df.at[idx, 'Indice_Punteo'] = punteo_index
+                punteo_index += 1
+            continue
+
+        # Buscar filas donde 'Debe' es igual a 'Haber' y no han sido punteadas
+        if fila['Debe'] == fila['Haber'] and fila['Debe'] != 0:
+            coincidencia = df[(df['Debe'] == fila['Haber']) & (df['Indice_Punteo'].isna())]
+            if not coincidencia.empty:
+                idx = coincidencia.index[0]
+                df.at[i, 'Indice_Punteo'] = punteo_index
+                df.at[idx, 'Indice_Punteo'] = punteo_index
+                punteo_index += 1
 
     return df
 
 def emparejar_por_suma(df):
     """
     Busca combinaciones de sumas en la columna 'Debe' para emparejar con los valores de 'Haber'.
+    Ignora las celdas con valor 0.00 en las columnas 'Debe' y 'Haber', pero no ignora la fila completa.
     """
-    # Filtrar filas donde 'Debe' o 'Haber' sean 0 o NaN
-    df = df[(df['Debe'] != 0) & (df['Haber'] != 0) & (df['Debe'].notna()) & (df['Haber'].notna())]
-
     no_punteados = df[df['Indice_Punteo'].isna()].copy()
     punteo_index = df['Indice_Punteo'].max() + 1 if df['Indice_Punteo'].notna().any() else 1
 
     for i, fila in no_punteados.iterrows():
+        # Ignorar celdas con valor 0.00 en 'Debe' o 'Haber'
+        if fila['Debe'] == 0 and fila['Haber'] == 0:
+            continue
+
         objetivo = fila['Haber']
         candidatos = no_punteados[no_punteados['Debe'] > 0]
 
