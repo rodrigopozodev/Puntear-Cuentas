@@ -19,6 +19,7 @@ export class InformesComponent implements OnInit {
   loading = true;
   loadingData = false; // Añadida esta propiedad
   error: string | null = null;
+  showConfirmDialog = false; // Añade esta propiedad
 
   constructor(private informesService: InformesService) {}
 
@@ -121,5 +122,17 @@ export class InformesComponent implements OnInit {
 
   stopPropagation(event: Event) {
     event.stopPropagation();
+  }
+
+  showDialog() {
+    this.showConfirmDialog = true;
+  }
+
+  hideDialog() {
+    this.showConfirmDialog = false;
+  }
+
+  navigateToHome() {
+    window.location.href = 'http://localhost:4200/';
   }
 }
