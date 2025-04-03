@@ -3,11 +3,14 @@ import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { InformesService, InformeFile, ExcelData } from '../../services/informes.service';
 
+const informesPath = 'C:/Users/rodri/Desktop/Mis Proyectos/Puntear Cuentas/informes';
+
 @Component({
   selector: 'app-informes',
   standalone: true,
   imports: [CommonModule, HttpClientModule],
-  templateUrl: './informes.component.html'
+  templateUrl: './informes.component.html',
+  styleUrls: ['./informes.component.css']  // Añade esta línea
 })
 export class InformesComponent implements OnInit {
   informes: { [folder: string]: InformeFile[] } = {};
@@ -50,10 +53,15 @@ export class InformesComponent implements OnInit {
   }
 
   hasInformes(): boolean {
-    return Object.keys(this.informes || {}).length > 0;
+    return Object.keys(this.informes).length > 0;
   }
 
   downloadInforme(file: InformeFile) {
+    if (!file || !file.path) {
+      this.error = 'Error: Archivo no válido';
+      return;
+    }
+
     this.informesService.downloadInforme(file.path).subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
@@ -65,7 +73,7 @@ export class InformesComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error al descargar:', err);
-        alert('Error al descargar el informe');
+        this.error = 'Error al descargar el informe';
       }
     });
   }
@@ -83,17 +91,25 @@ export class InformesComponent implements OnInit {
   }
 
   viewExcelContent(file: InformeFile) {
+    if (!file || !file.path) {
+      this.error = 'Error: Archivo no válido';
+      return;
+    }
+
     this.selectedFile = file;
-    this.loadingData = true; // Activamos el loading
+    this.loadingData = true;
+    this.error = null; // Limpiamos errores anteriores
+    
     this.informesService.getExcelContent(file.path).subscribe({
       next: (data) => {
         this.excelData = data;
-        this.loadingData = false; // Desactivamos el loading al recibir los datos
+        this.loadingData = false;
       },
       error: (err) => {
         console.error('Error al cargar datos:', err);
         this.error = 'Error al cargar los datos del archivo';
-        this.loadingData = false; // Desactivamos el loading en caso de error
+        this.loadingData = false;
+        this.selectedFile = null;
       }
     });
   }

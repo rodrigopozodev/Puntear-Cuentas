@@ -1,0 +1,31 @@
+.table-container {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-wrapper {
+  width: 100%;
+  padding-bottom: 0.5rem;
+  overflow-y: auto;
+}
+
+table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+td, th {
+  padding: 0.5rem;
+  min-width: 120px; /* Reducido de 150px a 120px */
+  max-width: 200px; /* Añadido máximo ancho */
+  word-wrap: break-word;
+  white-space: normal;
+  font-size: 0.875rem; /* Tamaño de fuente más pequeño */
+}
+
+.grid-informes {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+}

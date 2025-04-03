@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
 
 export interface InformeFile {
   name: string;
@@ -25,7 +25,9 @@ export class InformesService {
   constructor(private http: HttpClient) {}
 
   getInformes(): Observable<InformeFile[]> {
+    console.log('Solicitando informes...');
     return this.http.get<InformeFile[]>(`${this.API_URL}/informes`).pipe(
+      tap(files => console.log('Informes recibidos:', files)),
       map(files => files.map(file => ({
         ...file,
         createdAt: new Date(file.createdAt)
