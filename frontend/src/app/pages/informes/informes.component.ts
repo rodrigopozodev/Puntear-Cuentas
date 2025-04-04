@@ -2,24 +2,27 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { InformesService, InformeFile, ExcelData } from '../../services/informes.service';
+import { ScrollingModule } from '@angular/cdk/scrolling';
 
 const informesPath = 'C:/Users/rodri/Desktop/Mis Proyectos/Puntear Cuentas/informes';
 
 @Component({
   selector: 'app-informes',
   standalone: true,
-  imports: [CommonModule, HttpClientModule],
+  imports: [CommonModule, HttpClientModule, ScrollingModule],
   templateUrl: './informes.component.html',
-  styleUrls: ['./informes.component.css']  // Añade esta línea
+  styleUrls: ['./informes.component.css']
 })
 export class InformesComponent implements OnInit {
   informes: { [folder: string]: InformeFile[] } = {};
   selectedFile: InformeFile | null = null;
   excelData: ExcelData | null = null;
   loading = true;
-  loadingData = false; // Añadida esta propiedad
+  loadingData = false;
   error: string | null = null;
-  showConfirmDialog = false; // Añade esta propiedad
+  showConfirmDialog = false;
+  displayedRows: any[] = [];
+  isLoadingTable = false;
 
   constructor(private informesService: InformesService) {}
 
@@ -99,17 +102,30 @@ export class InformesComponent implements OnInit {
 
     this.selectedFile = file;
     this.loadingData = true;
-    this.error = null; // Limpiamos errores anteriores
+    this.isLoadingTable = true;
+    this.error = null;
     
     this.informesService.getExcelContent(file.path).subscribe({
       next: (data) => {
-        this.excelData = data;
-        this.loadingData = false;
+        // Mostrar mensaje de carga antes de procesar los datos
+        setTimeout(() => {
+          this.excelData = data;
+          this.displayedRows = data.rows;
+          this.loadingData = false;
+          
+          // Dar tiempo al DOM para renderizar y luego quitar el loader
+          requestAnimationFrame(() => {
+            setTimeout(() => {
+              this.isLoadingTable = false;
+            }, 100);
+          });
+        }, 0);
       },
       error: (err) => {
         console.error('Error al cargar datos:', err);
         this.error = 'Error al cargar los datos del archivo';
         this.loadingData = false;
+        this.isLoadingTable = false;
         this.selectedFile = null;
       }
     });
@@ -134,5 +150,9 @@ export class InformesComponent implements OnInit {
 
   navigateToHome() {
     window.location.href = 'http://localhost:4200/';
+  }
+
+  trackByIndex(index: number): number {
+    return index;
   }
 }

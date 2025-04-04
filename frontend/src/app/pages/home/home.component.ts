@@ -1,6 +1,6 @@
 import { Component, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { SaveComponent } from '../save/save.component';
 
 @Component({
@@ -31,13 +31,29 @@ import { SaveComponent } from '../save/save.component';
           </span>
         </button>
 
-        <app-save #saveComponent></app-save>
+        <app-save #saveComponent (backToHome)="clearReports()"></app-save>
       </div>
     </div>
   `
 })
 export class HomeComponent {
   @ViewChild('saveComponent') saveComponent!: SaveComponent;
+  
+  constructor(private http: HttpClient) {}
+
+  async clearReports() {
+    const confirm = window.confirm('¿Estás seguro?\nSi vuelves a la página principal, todos los informes serán borrados de la vista actual. ¿Deseas continuar?');
+    
+    if (confirm) {
+      try {
+        await this.http.delete('http://localhost:3000/informes').toPromise();
+        // Opcional: mostrar mensaje de éxito
+        console.log('Informes borrados exitosamente');
+      } catch (error) {
+        console.error('Error al borrar informes:', error);
+      }
+    }
+  }
 
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;

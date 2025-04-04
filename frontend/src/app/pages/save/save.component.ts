@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, Output, EventEmitter } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -19,6 +19,8 @@ import { Router } from '@angular/router';
   `
 })
 export class SaveComponent {
+  @Output() backToHome = new EventEmitter<void>();
+
   status: string | null = null;
   statusMessage: string = '';
   statusClass: string = '';
@@ -87,5 +89,10 @@ export class SaveComponent {
     }
     
     console.error('Error:', error);
+  }
+
+  // Cuando el usuario navega de vuelta a home
+  goBack() {
+    this.backToHome.emit();
   }
 }

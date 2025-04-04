@@ -2,6 +2,13 @@
   max-width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  height: calc(100vh - 200px);
+  overflow: auto;
+  position: relative;
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px; /* Aplicamos virtualización por hardware para mejorar el rendimiento */
 }
 
 .table-wrapper {
@@ -11,21 +18,57 @@
 }
 
 table {
+  border-collapse: separate;
+  border-spacing: 0;
   width: 100%;
   table-layout: fixed;
-  border-collapse: collapse;
+}
+
+thead {
+  background: white;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+th {
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 td, th {
-  padding: 0.5rem;
+  padding: 8px;
   min-width: 120px; /* Reducido de 150px a 120px */
   max-width: 200px; /* Añadido máximo ancho */
   word-wrap: break-word;
   white-space: normal;
   font-size: 0.875rem; /* Tamaño de fuente más pequeño */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+tr {
+  background: white;
+  contain: content;
+}
+
+/* Optimización para scroll suave */
+tbody {
+  contain: content;
+}
+
+/* Animación suave para el loader */
+.bg-opacity-90 {
+  transition: opacity 0.2s ease-in-out;
 }
 
 .grid-informes {
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 1rem;
+}
+
+.overflow-auto {
+  overflow: auto;
+  -webkit-overflow-scrolling: touch; /* Mejora el scroll en dispositivos táctiles */
 }

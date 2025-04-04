@@ -10,6 +10,19 @@ const xlsx = require('xlsx');
 const app = express();
 app.use(cors());
 
+// Crear carpetas necesarias al inicio
+const requiredPaths = [
+  'C:/Users/rodri/Desktop/Mis Proyectos/Puntear Cuentas/data',
+  'C:/Users/rodri/Desktop/Mis Proyectos/Puntear Cuentas/informes'
+];
+
+requiredPaths.forEach(path => {
+  if (!fs.existsSync(path)) {
+    fs.mkdirSync(path, { recursive: true });
+    console.log(`Carpeta creada: ${path}`);
+  }
+});
+
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     const savePath = 'C:/Users/rodri/Desktop/Mis Proyectos/Puntear Cuentas/data';
@@ -151,6 +164,22 @@ app.get('/informes/content', async (req, res) => {
   } catch (error) {
     console.error('Error al leer Excel:', error);
     res.status(500).json({ error: 'Error al leer el archivo Excel' });
+  }
+});
+
+app.delete('/informes', async (req, res) => {
+  try {
+    const informesPath = 'C:/Users/rodri/Desktop/Mis Proyectos/Puntear Cuentas/informes';
+    const files = await fsPromises.readdir(informesPath);
+    
+    for (const file of files) {
+      await fsPromises.unlink(path.join(informesPath, file));
+    }
+    
+    res.json({ message: 'Informes borrados exitosamente' });
+  } catch (error) {
+    console.error('Error al borrar informes:', error);
+    res.status(500).json({ error: 'Error al borrar los informes' });
   }
 });
 
