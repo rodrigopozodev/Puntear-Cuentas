@@ -183,6 +183,39 @@ app.delete('/informes', async (req, res) => {
   }
 });
 
+app.delete('/delete-informes-folder', async (req, res) => {
+  try {
+    const informesPath = 'C:/Users/rodri/Desktop/Mis Proyectos/Puntear Cuentas/informes';
+    
+    // 1. Intentar borrar la carpeta completa
+    try {
+      await fsPromises.rm(informesPath, { recursive: true, force: true });
+      console.log('Carpeta informes eliminada exitosamente');
+    } catch (rmError) {
+      console.warn('Error al intentar borrar la carpeta:', rmError);
+      // Si falla, intentar con comando del sistema
+      await new Promise((resolve, reject) => {
+        exec(`rmdir /s /q "${informesPath}"`, (error) => {
+          if (error) reject(error);
+          else resolve(true);
+        });
+      });
+    }
+
+    // 2. Crear nueva carpeta vacía
+    await fsPromises.mkdir(informesPath, { recursive: true });
+    console.log('Nueva carpeta informes creada');
+
+    res.json({ message: 'Carpeta de informes reiniciada correctamente' });
+  } catch (error) {
+    console.error('Error al reiniciar la carpeta de informes:', error);
+    res.status(500).json({ 
+      error: 'Error al reiniciar la carpeta de informes',
+      details: error.message
+    });
+  }
+});
+
 const PORT = 3000;
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);

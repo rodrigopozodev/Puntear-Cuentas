@@ -149,7 +149,24 @@ export class InformesComponent implements OnInit {
   }
 
   navigateToHome() {
-    window.location.href = 'http://localhost:4200/';
+    // Primero intentamos borrar la carpeta
+    this.informesService.deleteInformesFolder().subscribe({
+      next: () => {
+        // Si se borra correctamente, limpiamos los datos y navegamos
+        this.informes = {};
+        this.selectedFile = null;
+        this.excelData = null;
+        this.displayedRows = [];
+        this.error = null;
+        
+        // Redirigimos a la página principal
+        window.location.href = 'http://localhost:4200/';
+      },
+      error: (err) => {
+        console.error('Error al borrar la carpeta de informes:', err);
+        this.error = 'Error al borrar los informes';
+      }
+    });
   }
 
   trackByIndex(index: number): number {

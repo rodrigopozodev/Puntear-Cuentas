@@ -47,4 +47,8 @@ export class InformesService {
       params: { path }
     });
   }
+
+  deleteInformesFolder() {
+    return this.http.delete(`${this.API_URL}/delete-informes-folder`);
+  }
 }
