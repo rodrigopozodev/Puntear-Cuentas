@@ -1,9 +1,13 @@
+# -*- coding: utf-8 -*-
 import os
 import shutil
 import sys
 import time
 from tqdm import tqdm
 from datetime import datetime, timedelta
+
+sys.stdout.reconfigure(encoding='utf-8')
+sys.stderr.reconfigure(encoding='utf-8')
 
 sys.path.append('./src')
 

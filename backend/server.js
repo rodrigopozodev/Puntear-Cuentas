@@ -3,7 +3,7 @@ const multer = require('multer');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
-const { exec } = require('child_process');
+const { exec, spawn } = require('child_process');
 const fsPromises = require('fs').promises;
 const xlsx = require('xlsx');
 
@@ -38,23 +38,49 @@ app.post('/save-excel', upload.single('file'), (req, res) => {
 });
 
 app.post('/execute-python', (req, res) => {
-  // Directorio base del proyecto
   const projectDir = 'C:/Users/rodri/Desktop/Mis Proyectos/Puntear Cuentas';
   
-  // Cambiar al directorio del proyecto y ejecutar el comando
-  exec('cd "' + projectDir + '" && python src/main.py', {
-    shell: 'C:\\Program Files\\Git\\bin\\bash.exe'  // Usar Git Bash
-  }, (error, stdout, stderr) => {
-    if (error) {
-      console.error(`Error ejecutando Python: ${error}`);
-      return res.status(500).send(error);
+  console.log('Ejecutando script Python...');
+  
+  const pythonProcess = spawn('python', ['src/main.py'], {
+    cwd: projectDir,
+    shell: true,
+    env: { ...process.env, PYTHONIOENCODING: 'utf-8' }
+  });
+
+  let output = '';
+  let errorOutput = '';
+
+  pythonProcess.stdout.setEncoding('utf-8');
+  pythonProcess.stderr.setEncoding('utf-8');
+
+  pythonProcess.stdout.on('data', (data) => {
+    console.log(`Python stdout: ${data}`);
+    output += data;
+  });
+
+  pythonProcess.stderr.on('data', (data) => {
+    console.log(`Python stderr: ${data}`);
+    // No tratamos la barra de progreso como error
+    if (!data.includes('Procesando valores:')) {
+      errorOutput += data;
     }
-    if (stderr) {
-      console.error(`stderr: ${stderr}`);
-      return res.status(500).send(stderr);
+  });
+
+  pythonProcess.on('close', (code) => {
+    console.log(`Python process exited with code ${code}`);
+    if (code === 0 && !errorOutput.includes('Error en el procesamiento')) {
+      res.json({
+        success: true,
+        output: output
+      });
+    } else {
+      res.status(500).json({
+        error: true,
+        message: 'Error en el script Python',
+        details: errorOutput || output
+      });
     }
-    console.log(`stdout: ${stdout}`);
-    res.send({ output: stdout });
   });
 });
 
