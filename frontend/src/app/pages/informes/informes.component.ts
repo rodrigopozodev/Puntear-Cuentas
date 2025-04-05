@@ -23,6 +23,7 @@ export class InformesComponent implements OnInit {
   showConfirmDialog = false;
   displayedRows: any[] = [];
   isLoadingTable = false;
+  loadingFiles: { [key: string]: boolean } = {}; // Añade esta línea
 
   constructor(private informesService: InformesService) {}
 
@@ -100,35 +101,53 @@ export class InformesComponent implements OnInit {
       return;
     }
 
-    this.selectedFile = file;
-    this.loadingData = true;
-    this.isLoadingTable = true;
-    this.error = null;
-    
-    this.informesService.getExcelContent(file.path).subscribe({
-      next: (data) => {
-        // Mostrar mensaje de carga antes de procesar los datos
-        setTimeout(() => {
+    try {
+      this.loadingFiles[file.path] = true;
+      this.selectedFile = file;
+      this.loadingData = true;
+      this.isLoadingTable = true;
+      this.error = null;
+      
+      this.informesService.getExcelContent(file.path).subscribe({
+        next: (data) => {
+          if (!data || !data.rows) {
+            throw new Error('Datos no válidos');
+          }
+          
           this.excelData = data;
           this.displayedRows = data.rows;
           this.loadingData = false;
+          this.loadingFiles[file.path] = false;
           
-          // Dar tiempo al DOM para renderizar y luego quitar el loader
           requestAnimationFrame(() => {
-            setTimeout(() => {
-              this.isLoadingTable = false;
-            }, 100);
+            this.isLoadingTable = false;
           });
-        }, 0);
-      },
-      error: (err) => {
-        console.error('Error al cargar datos:', err);
-        this.error = 'Error al cargar los datos del archivo';
-        this.loadingData = false;
-        this.isLoadingTable = false;
-        this.selectedFile = null;
-      }
-    });
+        },
+        error: (err) => {
+          console.error('Error al cargar datos:', err);
+          this.error = this.getErrorMessage(err);
+          this.loadingData = false;
+          this.isLoadingTable = false;
+          this.selectedFile = null;
+          this.loadingFiles[file.path] = false;
+        }
+      });
+    } catch (error) {
+      console.error('Error inesperado:', error);
+      this.error = 'Error inesperado al procesar el archivo';
+      this.loadingFiles[file.path] = false;
+    }
+  }
+
+  private getErrorMessage(error: any): string {
+    if (error.status === 400) {
+      return 'Error: La ruta del archivo no es válida o el archivo no es accesible';
+    } else if (error.status === 404) {
+      return 'Error: El archivo no fue encontrado';
+    } else if (error.status === 500) {
+      return 'Error del servidor al procesar el archivo';
+    }
+    return 'Error al cargar los datos del archivo';
   }
 
   closeModal() {

@@ -143,14 +143,23 @@ app.get('/informes/download', async (req, res) => {
   }
 });
 
-app.get('/informes/content', async (req, res) => {
+app.get('/informes/content', (req, res) => {
   try {
-    const filePath = req.query.path;
+    const filePath = req.query.filePath;
+    
     if (!filePath) {
       return res.status(400).json({ error: 'No se proporcionó la ruta del archivo' });
     }
 
-    const workbook = xlsx.readFile(filePath);
+    // Normalizar la ruta
+    const normalizedPath = path.normalize(filePath);
+    
+    // Verificar que el archivo existe
+    if (!fs.existsSync(normalizedPath)) {
+      return res.status(404).json({ error: 'Archivo no encontrado' });
+    }
+
+    const workbook = xlsx.readFile(normalizedPath);
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
     const jsonData = xlsx.utils.sheet_to_json(worksheet);
@@ -162,8 +171,8 @@ app.get('/informes/content', async (req, res) => {
       rows: jsonData
     });
   } catch (error) {
-    console.error('Error al leer Excel:', error);
-    res.status(500).json({ error: 'Error al leer el archivo Excel' });
+    console.error('Error al procesar el archivo:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
