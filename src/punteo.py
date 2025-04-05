@@ -139,8 +139,8 @@ def emparejar_por_suma(df, punteo_index, max_combinaciones=10, tolerancia=0):
 def generar_informes(df, archivo):
     """Genera los informes con los datos punteados y no punteados, conservando el formato original."""
     # Filtramos los datos
-    emparejados = df[df['Indice_Punteo'].notna()]
-    no_emparejados = df[df['Indice_Punteo'].isna()]
+    emparejados = df[df['Indice_Punteo'].notna()]  # Solo filas con Indice_Punteo no nulo
+    no_emparejados = df[df['Indice_Punteo'].isna()]  # Solo filas con Indice_Punteo nulo
 
     # Configuramos las rutas
     nombre_base = os.path.basename(archivo).replace(".xlsx", "")
@@ -155,16 +155,23 @@ def generar_informes(df, archivo):
     wb = load_workbook(archivo)
     ws = wb.active
 
-    # Añadimos el título de la columna 'Indice_Punteo' en la última columna
-    ultima_columna = ws.max_column + 1
-    ws.cell(row=1, column=ultima_columna, value='Indice_Punteo')
+    # Verificamos si la columna 'Indice_Punteo' ya existe
+    encabezados = [ws.cell(row=1, column=col).value for col in range(1, ws.max_column + 1)]
+    if 'Indice_Punteo' not in encabezados:
+        # Añadimos el título de la columna 'Indice_Punteo' en la última columna
+        ws.cell(row=1, column=ws.max_column + 1, value='Indice_Punteo')
 
-    # Sobrescribimos los datos procesados en la hoja original
-    for idx, row in df.iterrows():
+    # Limpiamos la hoja activa antes de escribir los datos punteados
+    for row in ws.iter_rows(min_row=2, max_row=ws.max_row):
+        for cell in row:
+            cell.value = None
+
+    # Sobrescribimos los datos procesados en la hoja original (solo emparejados)
+    fila_actual = 2  # Comenzamos en la fila 2 (después de los encabezados)
+    for _, row in emparejados.iterrows():
         for col_idx, value in enumerate(row, start=1):
-            ws.cell(row=idx + 2, column=col_idx, value=value)  # +2 para saltar encabezados
-        # Añadimos el valor de 'Indice_Punteo' en la última columna
-        ws.cell(row=idx + 2, column=ultima_columna, value=row['Indice_Punteo'])
+            ws.cell(row=fila_actual, column=col_idx, value=value)
+        fila_actual += 1  # Avanzamos a la siguiente fila
 
     # Guardamos el archivo con los datos punteados
     archivo_punteado = f"{subcarpeta_informes}/{nombre_base}_punteado.xlsx"
@@ -181,9 +188,11 @@ def generar_informes(df, archivo):
             cell.value = None
 
     # Escribimos los datos no emparejados en el nuevo archivo
-    for row_idx, row in enumerate(no_emparejados.itertuples(index=False), start=2):
+    fila_actual = 2  # Comenzamos en la fila 2 (después de los encabezados)
+    for _, row in no_emparejados.iterrows():
         for col_idx, value in enumerate(row, start=1):
-            ws_no_punteado.cell(row=row_idx, column=col_idx, value=value)
+            ws_no_punteado.cell(row=fila_actual, column=col_idx, value=value)
+        fila_actual += 1  # Avanzamos a la siguiente fila
 
     # Guardamos el archivo de no emparejados
     wb_no_punteado.save(archivo_no_punteado)
