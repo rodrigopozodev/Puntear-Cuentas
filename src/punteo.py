@@ -5,6 +5,7 @@ from itertools import combinations
 from tqdm import tqdm
 from utils import cargar_datos, crear_directorio
 from openpyxl import load_workbook
+from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
 
 def emparejar_iguales(df):
     """Empareja valores exactamente iguales con barra de progreso."""
@@ -137,7 +138,7 @@ def emparejar_por_suma(df, punteo_index, max_combinaciones=10, tolerancia=0):
     return df
 
 def generar_informes(df, archivo):
-    """Genera los informes con los datos punteados y no punteados, conservando el formato original."""
+    """Genera los informes con los datos punteados y no punteados, eliminando filas vacías."""
     # Filtramos los datos
     emparejados = df[df['Indice_Punteo'].notna()]  # Solo filas con Indice_Punteo no nulo
     no_emparejados = df[df['Indice_Punteo'].isna()]  # Solo filas con Indice_Punteo nulo
@@ -165,6 +166,11 @@ def generar_informes(df, archivo):
     for row in ws.iter_rows(min_row=2, max_row=ws.max_row):
         for cell in row:
             cell.value = None
+            # Limpiamos el formato de las celdas vacías
+            cell.fill = PatternFill(fill_type=None)
+            cell.font = Font()
+            cell.alignment = Alignment()
+            cell.border = Border()
 
     # Sobrescribimos los datos procesados en la hoja original (solo emparejados)
     fila_actual = 2  # Comenzamos en la fila 2 (después de los encabezados)
@@ -172,6 +178,10 @@ def generar_informes(df, archivo):
         for col_idx, value in enumerate(row, start=1):
             ws.cell(row=fila_actual, column=col_idx, value=value)
         fila_actual += 1  # Avanzamos a la siguiente fila
+
+    # Eliminamos las filas vacías restantes
+    for row in range(fila_actual, ws.max_row + 1):
+        ws.delete_rows(fila_actual)
 
     # Guardamos el archivo con los datos punteados
     archivo_punteado = f"{subcarpeta_informes}/{nombre_base}_punteado.xlsx"
@@ -186,6 +196,11 @@ def generar_informes(df, archivo):
     for row in ws_no_punteado.iter_rows(min_row=2, max_row=ws_no_punteado.max_row):
         for cell in row:
             cell.value = None
+            # Limpiamos el formato de las celdas vacías
+            cell.fill = PatternFill(fill_type=None)
+            cell.font = Font()
+            cell.alignment = Alignment()
+            cell.border = Border()
 
     # Escribimos los datos no emparejados en el nuevo archivo
     fila_actual = 2  # Comenzamos en la fila 2 (después de los encabezados)
@@ -193,6 +208,10 @@ def generar_informes(df, archivo):
         for col_idx, value in enumerate(row, start=1):
             ws_no_punteado.cell(row=fila_actual, column=col_idx, value=value)
         fila_actual += 1  # Avanzamos a la siguiente fila
+
+    # Eliminamos las filas vacías restantes
+    for row in range(fila_actual, ws_no_punteado.max_row + 1):
+        ws_no_punteado.delete_rows(fila_actual)
 
     # Guardamos el archivo de no emparejados
     wb_no_punteado.save(archivo_no_punteado)
