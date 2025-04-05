@@ -4,6 +4,7 @@ import numpy as np
 from itertools import combinations
 from tqdm import tqdm
 from utils import cargar_datos, crear_directorio
+from openpyxl import load_workbook
 
 def emparejar_iguales(df):
     """Empareja valores exactamente iguales con barra de progreso."""
@@ -136,10 +137,7 @@ def emparejar_por_suma(df, punteo_index, max_combinaciones=10, tolerancia=0):
     return df
 
 def generar_informes(df, archivo):
-    """Genera los informes con los datos punteados y no punteados."""
-    # Eliminamos la ordenación por Indice_Punteo
-    df['Indice_Punteo'] = pd.to_numeric(df['Indice_Punteo'], errors='coerce')
-
+    """Genera los informes con los datos punteados y no punteados, conservando el formato original."""
     # Filtramos los datos
     emparejados = df[df['Indice_Punteo'].notna()]
     no_emparejados = df[df['Indice_Punteo'].isna()]
@@ -153,8 +151,43 @@ def generar_informes(df, archivo):
     crear_directorio(carpeta_informes)
     crear_directorio(subcarpeta_informes)
 
-    # Generamos los informes
-    emparejados.to_excel(f"{subcarpeta_informes}/{nombre_base}_punteados.xlsx", index=False)
-    no_emparejados.to_excel(f"{subcarpeta_informes}/{nombre_base}_no_punteados.xlsx", index=False)
+    # Cargamos el archivo original con openpyxl
+    wb = load_workbook(archivo)
+    ws = wb.active
 
-    print(f"Informes generados para {archivo}: {nombre_base}_punteados.xlsx y {nombre_base}_no_punteados.xlsx")
+    # Añadimos el título de la columna 'Indice_Punteo' en la última columna
+    ultima_columna = ws.max_column + 1
+    ws.cell(row=1, column=ultima_columna, value='Indice_Punteo')
+
+    # Sobrescribimos los datos procesados en la hoja original
+    for idx, row in df.iterrows():
+        for col_idx, value in enumerate(row, start=1):
+            ws.cell(row=idx + 2, column=col_idx, value=value)  # +2 para saltar encabezados
+        # Añadimos el valor de 'Indice_Punteo' en la última columna
+        ws.cell(row=idx + 2, column=ultima_columna, value=row['Indice_Punteo'])
+
+    # Guardamos el archivo con los datos punteados
+    archivo_punteado = f"{subcarpeta_informes}/{nombre_base}_punteado.xlsx"
+    wb.save(archivo_punteado)
+
+    # Crear un nuevo archivo para los no emparejados
+    archivo_no_punteado = f"{subcarpeta_informes}/{nombre_base}_no_punteado.xlsx"
+    wb_no_punteado = load_workbook(archivo)  # Cargamos el archivo original para conservar el formato
+    ws_no_punteado = wb_no_punteado.active
+
+    # Limpiamos las filas existentes en la hoja activa
+    for row in ws_no_punteado.iter_rows(min_row=2, max_row=ws_no_punteado.max_row):
+        for cell in row:
+            cell.value = None
+
+    # Escribimos los datos no emparejados en el nuevo archivo
+    for row_idx, row in enumerate(no_emparejados.itertuples(index=False), start=2):
+        for col_idx, value in enumerate(row, start=1):
+            ws_no_punteado.cell(row=row_idx, column=col_idx, value=value)
+
+    # Guardamos el archivo de no emparejados
+    wb_no_punteado.save(archivo_no_punteado)
+
+    print(f"Informes generados para {archivo}:")
+    print(f"→ Archivo punteado: {archivo_punteado}")
+    print(f"→ Archivo no punteado: {archivo_no_punteado}")
