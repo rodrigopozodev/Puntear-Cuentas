@@ -7,22 +7,98 @@
 
     <!-- Planes de Suscripción -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-      <div *ngFor="let plan of plans" 
-           class="bg-white/10 backdrop-blur-md rounded-xl p-6 shadow-xl hover:transform hover:-translate-y-2 transition-all duration-300">
-        <h3 class="text-2xl font-bold text-white mb-4">{{ plan.name }}</h3>
+      <!-- Plan Gratuito -->
+      <div *ngIf="showFreePlan" class="bg-white/10 backdrop-blur-md rounded-xl p-6 shadow-xl hover:transform hover:-translate-y-2 transition-all duration-300">
+        <h3 class="text-2xl font-bold text-white mb-4">Plan Gratuito</h3>
         <div class="text-3xl font-bold text-white mb-6">
-          {{ plan.price }}€<span class="text-lg font-normal">/mes</span>
+          0€<span class="text-lg font-normal">/5 días (hasta 13/04/2025)</span>
         </div>
+        <!-- Eliminamos el div de fecha que estaba separado -->
         <ul class="space-y-3 mb-6">
-          <li *ngFor="let feature of plan.features" 
-              class="flex items-center text-white/90">
+          <li class="flex items-center text-white/90">
             <svg class="w-5 h-5 mr-2 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
             </svg>
-            {{ feature }}
+            Ventaja 1
+          </li>
+          <li class="flex items-center text-white/90">
+            <svg class="w-5 h-5 mr-2 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            Ventaja 2
+          </li>
+          <li class="flex items-center text-white/90">
+            <svg class="w-5 h-5 mr-2 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            Ventaja 3
           </li>
         </ul>
-        <button (click)="selectPlan(plan)"
+        <button (click)="selectPlan({name: 'Plan Gratuito', price: 0, noPayment: true})"
+                class="w-full py-3 px-4 bg-white text-purple-600 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 font-semibold">
+          Activar Plan Gratuito
+        </button>
+      </div>
+
+      <!-- Plan Estándar -->
+      <div class="bg-white/10 backdrop-blur-md rounded-xl p-6 shadow-xl hover:transform hover:-translate-y-2 transition-all duration-300">
+        <h3 class="text-2xl font-bold text-white mb-4">Plan Estándar</h3>
+        <div class="text-3xl font-bold text-white mb-6">
+          3.99€<span class="text-lg font-normal">/mes</span>
+        </div>
+        <ul class="space-y-3 mb-6">
+          <li class="flex items-center text-white/90">
+            <svg class="w-5 h-5 mr-2 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            Ventaja 1
+          </li>
+          <li class="flex items-center text-white/90">
+            <svg class="w-5 h-5 mr-2 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            Ventaja 2
+          </li>
+          <li class="flex items-center text-white/90">
+            <svg class="w-5 h-5 mr-2 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            Ventaja 3
+          </li>
+        </ul>
+        <button (click)="selectPlan({name: 'Plan Estándar', price: 3.99})"
+                class="w-full py-3 px-4 bg-white text-purple-600 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 font-semibold">
+          Seleccionar Plan
+        </button>
+      </div>
+
+      <!-- Plan Premium -->
+      <div class="bg-white/10 backdrop-blur-md rounded-xl p-6 shadow-xl hover:transform hover:-translate-y-2 transition-all duration-300">
+        <h3 class="text-2xl font-bold text-white mb-4">Plan Premium</h3>
+        <div class="text-3xl font-bold text-white mb-6">
+          9.99€<span class="text-lg font-normal">/mes</span>
+        </div>
+        <ul class="space-y-3 mb-6">
+          <li class="flex items-center text-white/90">
+            <svg class="w-5 h-5 mr-2 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            Ventaja 1
+          </li>
+          <li class="flex items-center text-white/90">
+            <svg class="w-5 h-5 mr-2 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            Ventaja 2
+          </li>
+          <li class="flex items-center text-white/90">
+            <svg class="w-5 h-5 mr-2 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            Ventaja 3
+          </li>
+        </ul>
+        <button (click)="selectPlan({name: 'Plan Premium', price: 9.99})"
                 class="w-full py-3 px-4 bg-white text-purple-600 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 font-semibold">
           Seleccionar Plan
         </button>
@@ -30,7 +106,7 @@
     </div>
 
     <!-- Métodos de Pago -->
-    <div *ngIf="selectedPlan" class="bg-white/10 backdrop-blur-md rounded-xl p-6 shadow-xl">
+    <div *ngIf="selectedPlan && !selectedPlan.noPayment" class="bg-white/10 backdrop-blur-md rounded-xl p-6 shadow-xl">
       <h2 class="text-2xl font-bold text-white mb-6 text-center">Método de Pago</h2>
       
       <!-- Opciones de Pago -->
@@ -126,3 +202,4 @@
     </div>
   </div>
 </div>
+

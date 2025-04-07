@@ -11,22 +11,33 @@ import { FormsModule } from '@angular/forms';
 export class PagosComponent {
   selectedPaymentMethod: string = '';
   selectedPlan: any = null;
+  showFreePlan: boolean = true;
+  expirationDate = new Date('2025-04-13');
+
+  ngOnInit() {
+    this.checkFreePlanAvailability();
+  }
+
+  private checkFreePlanAvailability() {
+    const now = new Date();
+    this.showFreePlan = now < this.expirationDate;
+  }
   
   plans = [
     {
-      name: 'Básico',
+      name: 'Plan Gratuito',
+      price: 0,
+      features: ['Ventaja 1', 'Ventaja 2', 'Ventaja 3']
+    },
+    {
+      name: 'Plan Estándar',
+      price: 3.99,
+      features: ['Ventaja 1', 'Ventaja 2', 'Ventaja 3']
+    },
+    {
+      name: 'Plan Premium',
       price: 9.99,
-      features: ['Hasta 1000 registros', 'Soporte básico', 'Exportación PDF']
-    },
-    {
-      name: 'Profesional',
-      price: 19.99,
-      features: ['Hasta 10000 registros', 'Soporte prioritario', 'Exportación múltiple', 'API access']
-    },
-    {
-      name: 'Empresarial',
-      price: 49.99,
-      features: ['Registros ilimitados', 'Soporte 24/7', 'Todas las características', 'Multiple usuarios']
+      features: ['Ventaja 1', 'Ventaja 2', 'Ventaja 3']
     }
   ];
 
@@ -41,16 +52,13 @@ export class PagosComponent {
 
   processCreditCardPayment(formData: any) {
     console.log('Procesando pago con tarjeta:', formData);
-    // Implementar lógica de pago con tarjeta
   }
 
   processPayPalPayment() {
     console.log('Iniciando pago con PayPal');
-    // Implementar lógica de PayPal
   }
 
   processBizumPayment(phone: string) {
     console.log('Procesando pago con Bizum:', phone);
-    // Implementar lógica de Bizum
   }
 }
