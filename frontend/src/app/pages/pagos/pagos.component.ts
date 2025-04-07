@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-pagos',
@@ -41,9 +42,16 @@ export class PagosComponent {
     }
   ];
 
+  constructor(private router: Router) {}
+
   selectPlan(plan: any) {
-    this.selectedPlan = plan;
-    this.selectedPaymentMethod = '';
+    if (plan.noPayment) {
+      // Plan gratuito
+      this.router.navigate(['/home']);
+    } else {
+      this.selectedPlan = plan;
+      this.selectedPaymentMethod = '';
+    }
   }
 
   selectPaymentMethod(method: string) {
@@ -52,13 +60,16 @@ export class PagosComponent {
 
   processCreditCardPayment(formData: any) {
     console.log('Procesando pago con tarjeta:', formData);
+    this.router.navigate(['/home']);
   }
 
   processPayPalPayment() {
     console.log('Iniciando pago con PayPal');
+    this.router.navigate(['/home']);
   }
 
   processBizumPayment(phone: string) {
     console.log('Procesando pago con Bizum:', phone);
+    this.router.navigate(['/home']);
   }
 }

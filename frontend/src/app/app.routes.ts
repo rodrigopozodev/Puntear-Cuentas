@@ -3,7 +3,8 @@ import { HomeComponent } from './pages/home/home.component';
 import { SaveComponent } from './pages/save/save.component';
 
 export const routes: Routes = [
-  { path: '', component: HomeComponent },
+  { path: '', redirectTo: 'pagos', pathMatch: 'full' },
+  { path: 'home', component: HomeComponent },
   { path: 'save', component: SaveComponent },
   {
     path: 'informes',
@@ -15,5 +16,5 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/pagos/pagos.component')
       .then(m => m.PagosComponent)
   },
-  { path: '**', redirectTo: '' }
+  { path: '**', redirectTo: 'pagos' }
 ];
