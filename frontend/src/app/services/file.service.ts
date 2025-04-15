@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
 })
 export class FileService {
   private readonly SAVE_PATH = 'C:/Users/rodri/Desktop/Mis Proyectos/Puntear Cuentas/data';
-  private readonly API_URL = 'http://localhost:3000';
+  private readonly API_URL = 'https://puntear-cuentas.onrender.com';
 
   constructor(private http: HttpClient) {}
 

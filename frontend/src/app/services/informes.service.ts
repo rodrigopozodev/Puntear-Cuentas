@@ -20,7 +20,7 @@ export interface ExcelData {
   providedIn: 'root'
 })
 export class InformesService {
-  private readonly API_URL = 'http://localhost:3000';
+  private readonly API_URL = 'https://puntear-cuentas.onrender.com';
 
   constructor(private http: HttpClient) {}
 

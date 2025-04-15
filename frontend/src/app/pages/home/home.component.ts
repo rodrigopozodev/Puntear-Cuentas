@@ -46,7 +46,7 @@ export class HomeComponent {
     
     if (confirm) {
       try {
-        await this.http.delete('http://localhost:3000/informes').toPromise();
+        await this.http.delete('https://puntear-cuentas.onrender.com/informes').toPromise();
         // Opcional: mostrar mensaje de éxito
         console.log('Informes borrados exitosamente');
       } catch (error) {

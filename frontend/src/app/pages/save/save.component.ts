@@ -45,7 +45,7 @@ export class SaveComponent {
     this.statusClass = 'bg-blue-100 text-blue-800';
     this.errorDetails = '';
 
-    this.http.post('http://localhost:3000/save-excel', formData)
+    this.http.post('https://puntear-cuentas.onrender.com/save-excel', formData)
       .subscribe({
         next: () => {
           this.executePythonScript();
@@ -61,7 +61,7 @@ export class SaveComponent {
     this.statusMessage = 'Procesando archivo...';
     this.statusClass = 'bg-blue-100 text-blue-800';
 
-    this.http.post('http://localhost:3000/execute-python', {})
+    this.http.post('https://puntear-cuentas.onrender.com/execute-python', {})
       .subscribe({
         next: (response: any) => {
           if (response.success) {
