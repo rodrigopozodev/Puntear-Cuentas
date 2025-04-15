@@ -4,4 +4,4 @@ $ node server.js
 
 rm -rf dist
 ng build --configuration production
-netlify deploy --dir=dist/frontend/browser
+netlify deploy --prod
