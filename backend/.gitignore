@@ -5,6 +5,11 @@ yarn-debug.log
 yarn-error.log
 package-lock.json
 
+# Ignorar archivos Excel
+*.xls
+*.xlsx
+*.xlsm
+
 # Environment variables
 .env
 .env.local
