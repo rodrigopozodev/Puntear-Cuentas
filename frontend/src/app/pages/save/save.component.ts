@@ -39,12 +39,12 @@ export class SaveComponent {
   saveExcel(file: File) {
     const formData = new FormData();
     formData.append('file', file);
-
-    this.status = 'uploading';
+  
+    // Cambia el estado a 'uploading' cuando comienza el proceso de subida
+    this.status = 'processing';
     this.statusMessage = 'Subiendo archivo...';
     this.statusClass = 'bg-blue-100 text-blue-800';
-    this.errorDetails = '';
-
+  
     this.http.post('https://puntear-cuentas.onrender.com/save-excel', formData)
       .subscribe({
         next: () => {
@@ -55,12 +55,12 @@ export class SaveComponent {
         }
       });
   }
-
+  
   private executePythonScript() {
     this.status = 'processing';
     this.statusMessage = 'Procesando archivo...';
     this.statusClass = 'bg-blue-100 text-blue-800';
-
+  
     this.http.post('https://puntear-cuentas.onrender.com/execute-python', {})
       .subscribe({
         next: (response: any) => {
@@ -69,7 +69,6 @@ export class SaveComponent {
             this.statusMessage = 'Archivo procesado exitosamente';
             this.statusClass = 'bg-green-100 text-green-800';
             console.log('Python script output:', response.output);
-            // Esperar un segundo antes de navegar para que el usuario vea el mensaje de éxito
             setTimeout(() => {
               this.router.navigate(['/informes']);
             }, 1000);
@@ -83,7 +82,7 @@ export class SaveComponent {
           this.handleError('Error al procesar el archivo', error);
         }
       });
-  }
+  }  
 
   private handleError(message: string, error: HttpErrorResponse) {
     this.status = 'error';

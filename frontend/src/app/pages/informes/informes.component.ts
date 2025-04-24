@@ -179,7 +179,7 @@ export class InformesComponent implements OnInit {
         this.error = null;
         
         // Redirigimos a la página principal
-        window.location.href = 'http://localhost:4200/';
+        window.location.href = 'https://punteator.netlify.app/';
       },
       error: (err) => {
         console.error('Error al borrar la carpeta de informes:', err);
