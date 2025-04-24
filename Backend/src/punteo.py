@@ -139,8 +139,8 @@ def emparejar_por_suma(df, punteo_index, max_combinaciones=10, tolerancia=0):
 def generar_informes(df, archivo):
     """Genera los informes con los datos punteados y no punteados."""
     # Filtramos los datos
-    emparejados = df[df['Indice_Punteo'].notna()]
-    no_emparejados = df[df['Indice_Punteo'].isna()]
+    emparejados = df[df['Indice_Punteo'].notna()]  # Registros que han sido punteados
+    no_emparejados = df[df['Indice_Punteo'].isna()]  # Registros que no han sido punteados
 
     # Configuramos las rutas
     nombre_base = os.path.basename(archivo).replace(".xlsx", "")
@@ -151,13 +151,19 @@ def generar_informes(df, archivo):
     crear_directorio(carpeta_informes)
     crear_directorio(subcarpeta_informes)
 
-    # Generamos los archivos
+    # Generamos los archivos solo con los punteados
     archivo_punteado = f"{subcarpeta_informes}/{nombre_base}_punteado.xlsx"
     archivo_no_punteado = f"{subcarpeta_informes}/{nombre_base}_no_punteado.xlsx"
 
-    generar_archivo_excel(emparejados, archivo, archivo_punteado)
-    generar_archivo_excel(no_emparejados, archivo, archivo_no_punteado)
+    # Si no hay registros punteados, no generes el archivo punteado
+    if not emparejados.empty:
+        generar_archivo_excel(emparejados, archivo, archivo_punteado)
+        print(f"→ Archivo punteado: {archivo_punteado}")
+    
+    # Para los no punteados, eliminamos la columna Indice_Punteo
+    no_emparejados = no_emparejados.drop(columns=['Indice_Punteo'], errors='ignore')
 
-    print(f"Informes generados para {archivo}:")
-    print(f"→ Archivo punteado: {archivo_punteado}")
-    print(f"→ Archivo no punteado: {archivo_no_punteado}")
+    # Si no hay registros no punteados, no generes el archivo no punteado
+    if not no_emparejados.empty:
+        generar_archivo_excel(no_emparejados, archivo, archivo_no_punteado)
+        print(f"→ Archivo no punteado: {archivo_no_punteado}")
