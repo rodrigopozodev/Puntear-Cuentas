@@ -10,3 +10,11 @@
 .animate-fadeIn {
   animation: fadeIn 0.3s ease-out;
 }
+
+body, html {
+  margin: 0;
+}
+
+canvas {
+  display: block;
+}
