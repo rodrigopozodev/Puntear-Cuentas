@@ -1,53 +1,26 @@
 import { Component, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClientModule, HttpClient } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { SaveComponent } from '../save/save.component';
+import { firstValueFrom } from 'rxjs';
+
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, HttpClientModule, SaveComponent],
-  template: `
-    <div class="min-h-screen bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
-      <div class="text-center">
-        <h1 class="text-5xl font-bold text-white mb-8">Gestor de Archivos Excel</h1>
-        
-        <input
-          type="file"
-          id="fileInput"
-          accept=".xlsx,.xls"
-          class="hidden"
-          (change)="onFileSelected($event)"
-          #fileInput>
-            
-        <button 
-          (click)="fileInput.click()"
-          class="bg-white text-purple-600 px-8 py-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 font-semibold text-lg">
-          <span class="flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-            </svg>
-            Subir Excel
-          </span>
-        </button>
-
-        <app-save #saveComponent (backToHome)="clearReports()"></app-save>
-      </div>
-    </div>
-  `
+  imports: [CommonModule, SaveComponent],
+  templateUrl: './home.component.html'
 })
 export class HomeComponent {
   @ViewChild('saveComponent') saveComponent!: SaveComponent;
-  
+
   constructor(private http: HttpClient) {}
 
   async clearReports() {
-    const confirm = window.confirm('¿Estás seguro?\nSi vuelves a la página principal, todos los informes serán borrados de la vista actual. ¿Deseas continuar?');
-    
+    const confirm = window.confirm('¿Estás seguro? Si vuelves a la página principal, todos los informes serán borrados de la vista actual. ¿Deseas continuar?');
     if (confirm) {
       try {
-        await this.http.delete('https://puntear-cuentas.onrender.com/informes').toPromise();
-        // Opcional: mostrar mensaje de éxito
+        await firstValueFrom(this.http.delete('https://puntear-cuentas.onrender.com/informes'));
         console.log('Informes borrados exitosamente');
       } catch (error) {
         console.error('Error al borrar informes:', error);
