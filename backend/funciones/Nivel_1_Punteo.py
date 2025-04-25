@@ -20,8 +20,6 @@ def nivel_1_punteo(df):
     valores_debe = no_punteadas['Debe'].round(2).tolist()
     valores_haber = no_punteadas['Haber'].round(2).tolist()
 
-    punteadas = []  # Lista para almacenar las filas punteadas
-
     # Usar tqdm para la barra de progreso
     for i in tqdm(range(len(indices)), desc="Nivel 1", unit="fila"):
         if indices[i] in usado or valores_debe[i] == 0:
@@ -36,9 +34,7 @@ def nivel_1_punteo(df):
                 df.at[indices[i], 'Indice_Punteo'] = indice_actual
                 df.at[indices[j], 'Indice_Punteo'] = indice_actual
                 usado.update([indices[i], indices[j]])
-                punteadas.append((indices[i], indices[j]))
                 break
 
     print(f"✅ Nivel 1 completado. {len(usado)//2} pares punteados.")
-    print(f"🔗 Filas punteadas en Nivel 1: {punteadas}")
     return df
