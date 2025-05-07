@@ -1,0 +1,16 @@
+<div class="p-6 max-w-md mx-auto bg-white rounded-xl shadow-md space-y-4">
+    <h2 class="text-xl font-bold">Subir y Procesar Excel</h2>
+  
+    <input type="file" (change)="seleccionarArchivo($event)" class="block w-full text-sm text-gray-700" />
+    
+    <button (click)="subir()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 w-full">
+      Subir archivo
+    </button>
+  
+    <button (click)="procesar()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 w-full">
+      Procesar archivo
+    </button>
+  
+    <p class="text-gray-700 mt-2">{{ mensaje }}</p>
+  </div>
+  

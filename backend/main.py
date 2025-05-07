@@ -1,17 +1,27 @@
+from fastapi import FastAPI
+import uvicorn
+from fastapi.responses import JSONResponse
+
+from funciones.Nivel_1_Punteo import nivel_1_punteo
+from funciones.Nivel_2_Punteo import nivel_2_punteo
+from funciones.Nivel_3_Punteo import nivel_3_punteo
+from utils.cors import configurar_cors
+
+from fastapi import File, UploadFile
+from fastapi.responses import JSONResponse
+
 import os
 import shutil
 import glob
 import pandas as pd
 
-from funciones.Nivel_1_Punteo import nivel_1_punteo
-from funciones.Nivel_2_Punteo import nivel_2_punteo
-from funciones.Nivel_3_Punteo import nivel_3_punteo
-from utils.eliminar import eliminar_informes
-
 # Rutas
 CARPETA_SUBIDOS = "archivos/subidos"
 CARPETA_PROCESADOS = "archivos/procesados"
 CARPETA_INFORMES = "archivos/informes"
+
+app = FastAPI()
+configurar_cors(app)  # <-- Aplicar configuración de CORS
 
 def obtener_archivo_excel():
     archivos = glob.glob(os.path.join(CARPETA_SUBIDOS, "*.xlsx"))
@@ -22,39 +32,45 @@ def mover_a_procesados(ruta_archivo):
     nueva_ruta = os.path.join(CARPETA_PROCESADOS, nombre_archivo)
     shutil.move(ruta_archivo, nueva_ruta)
 
-def main():
-    print("⏳ Iniciando procesamiento...")
+@app.post("/subir")
+async def subir_archivo(file: UploadFile = File(...)):
+    try:
+        if not file.filename.endswith(".xlsx"):
+            return JSONResponse(content={"error": "Solo se permiten archivos .xlsx"}, status_code=400)
 
-    # 1. Eliminar informes anteriores
-    eliminar_informes(CARPETA_INFORMES)
+        ruta_guardado = os.path.join(CARPETA_SUBIDOS, file.filename)
+        with open(ruta_guardado, "wb") as f:
+            contenido = await file.read()
+            f.write(contenido)
 
-    # 2. Obtener archivo
-    archivo = obtener_archivo_excel()
-    if not archivo:
-        print("⚠️ No se encontró ningún archivo en 'archivos/subidos/'")
-        return
+        return {"mensaje": f"Archivo '{file.filename}' subido correctamente."}
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
 
-    print(f"📄 Archivo encontrado: {archivo}")
+@app.get("/procesar")
+def procesar_archivo():
+    try:
+        archivo = obtener_archivo_excel()
+        if not archivo:
+            return JSONResponse(content={"mensaje": "No se encontró ningún archivo para procesar."}, status_code=404)
 
-    # 3. Leer el archivo Excel
-    df = pd.read_excel(archivo)
+        df = pd.read_excel(archivo)
 
-    # 4. Ejecutar punteo nivel 1, 2 y 3
-    df = nivel_1_punteo(df)
-    df = nivel_2_punteo(df)
-    df = nivel_3_punteo(df)
+        df = nivel_1_punteo(df)
+        df = nivel_2_punteo(df)
+        df = nivel_3_punteo(df)
 
-    # 5. Guardar resultados
-    punteados = df[df['Indice_Punteo'].notna()]
-    no_punteados = df[df['Indice_Punteo'].isna()]
+        punteados = df[df['Indice_Punteo'].notna()]
+        no_punteados = df[df['Indice_Punteo'].isna()]
 
-    punteados.to_excel(os.path.join(CARPETA_INFORMES, "Punteados.xlsx"), index=False)
-    no_punteados.to_excel(os.path.join(CARPETA_INFORMES, "No_Punteados.xlsx"), index=False)
+        punteados.to_excel(os.path.join(CARPETA_INFORMES, "Punteados.xlsx"), index=False)
+        no_punteados.to_excel(os.path.join(CARPETA_INFORMES, "No_Punteados.xlsx"), index=False)
 
-    # 6. Mover archivo original a procesados
-    mover_a_procesados(archivo)
+        mover_a_procesados(archivo)
 
-    print("✅ Proceso finalizado correctamente.")
+        return {"mensaje": "Proceso finalizado correctamente."}
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
 
 if __name__ == "__main__":
-    main()
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
